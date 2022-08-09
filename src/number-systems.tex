@@ -1,0 +1,97 @@
+\section{Number Systems}
+Any base-$R$ number system is \textbf{weighted-positional}.
+
+The \textbf{decimal} number system has a \textbf{base} (or \textbf{radix}) of 10.
+
+Every digit going leftward from the decimal point has a weighted power of 10, starting from $10^0$ and increasing.
+
+Every digit going rightward from the decimal point has a weighted power of 10, starting from $10^{-1}$ and decreasing.
+
+This generalizes to any base-$R$ number system, with $R^i$ in place of $10^i$.
+
+\subsection{Conversions between Bases}
+We use the decimal system as an intermediary to convert between bases.
+
+For example, to convert between base-2 (\textbf{binary}) to base-7, we first convert to base-10, then convert to base-7.
+
+We can use grouping and/or ungrouping to convert between bases which are powers of 2.
+
+For example, to convert between base-2 and base-16 (\textbf{hexadecimal}), we partition the digits of the binary
+number in groups of 4, starting from the binary point, and partitioning outward.
+
+\subsubsection{Base-\textit{R} $\Rightarrow$ Decimal}
+The decimal equivalent of a base-$R$ number is the sum of its weighted digits.
+
+\subsubsection{Decimal $\Rightarrow$ Base-\textit{R}}
+This conversion performs \textbf{division-by-\textit{R}} for the whole number portion,
+and \textbf{multiplication-by-\textit{R}} for the fractional portion.
+
+Division-by-$R$ divides the whole number by $R$ until the quotient is 0.
+The result is produced from the remainders from \textbf{right to left}.
+
+Multiplication-by-$R$ multiplies the fractional portion by $R$ until the product is 0, or until the desired number of decimal places.
+The result is produced from the \textbf{carries} \textbf{left to right}.
+
+\subsection{Negative Numbers}
+\textbf{Signed numbers} include all positive and negative values, unlike \textbf{unsigned numbers} which
+only include positive values.
+
+There are 4 representations for signed binary numbers covered in this module.
+
+\subsubsection{Sign-and-Magnitude}
+\emph{Negate a number by inverting the sign bit.}
+
+This representation uses the leftmost (most-significant bit) as the \textbf{sign bit} --- 1 for negative, 0 for positive.
+
+This results in \textbf{duplicate zeros} (positive and negative), and a range of values of $-\left(2^{n-1} - 1\right)$ to $2^{n-1}-1$.
+
+\subsubsection{1s Complement}
+\emph{Negate a number by inverting each bit.}
+
+An $n$-bit number $x$ has a negated value $-x = 2^n - x - 1$.
+
+This also results in \textbf{duplicate zeros} (positive and negative), and a range of values of $-\left(2^{n-1} - 1\right)$ to $2^{n-1}-1$.
+
+
+The weight of the leftmost bit is $-\left(2^{n-1} - 1\right)$.
+
+\subsubsection{2s Complement}
+\emph{Negate a number by inverting each bit, then adding 1.}
+
+Alternatively, preserve each bit up to and the rightmost 1,
+then inverting every bit to the left of the rightmost 1.
+
+An $n$-bit number $x$ has a negated value $-x = 2^n - x$.
+
+This also results in \textbf{no duplicate zeros}, and a range of values of $-2^{n-1}$ to $2^{n-1}-1$.
+
+The weight of the leftmost bit is $-2^{n-1}$.
+
+\subsubsection{Excess Representation}
+\emph{Distribute positive and negative values by a simple addition or subtraction.}
+
+Excess-$k$ subtracts $k$ from the decimal value of the number, while preserving its base-2 representation.
+
+To convert from a decimal value to its excess-$k$ representation, we add $k$ to the decimal value and convert that to base-2.
+
+Typically, for an $n$-bit number, $k = 2^n - 1$.
+
+\subsection{Real Numbers}
+
+\textbf{Fixed-point representation} allocates a fixed number of bits for the whole number and fractional parts.
+
+This results in a limited range of numbers that can be represented.
+
+The IEEE 754 \textbf{floating point representation} resolves this by allocating a fixed number of bits to the
+\textbf{sign}, \textbf{exponent}, and \textbf{mantissa}.
+
+\begin{tabular}{l|l|l|l|l|l}
+    precision & bits & sign & exponent & mantissa & bias \\\hline
+    single & 32 & 1 & 8 & 23 & 127 \\
+    double & 64 & 1 & 11 & 52 & 1023 \\
+\end{tabular}
+
+The \textbf{sign bit} is 0 for positive numbers, and 1 for negative numbers.
+
+The \textbf{mantissa} is \textbf{normalized} with an implicit leading 1 bit, e.g. $110.1_2$ is normalized to
+$1.101_2 \times 2^2$, and only $101$ is stored in the mantissa.

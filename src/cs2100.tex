@@ -17,6 +17,11 @@
 \usepackage[none]{hyphenat} % no line breaking on words
 \usepackage[thinlines]{easytable} % better tables with row spacing
 
+% Custom named colors
+\usepackage[dvipsnames]{xcolor}
+\definecolor{body}{HTML}{333333}
+\definecolor{background}{HTML}{FDFDFD}
+
 % Better tables
 \usepackage{tabularx}
 \renewcommand{\arraystretch}{1.25}
@@ -89,6 +94,8 @@
 \author{Notes by Jonathan Tay}
 \date{Last updated on \today}
 
+\color{body}
+\pagecolor{background} % remove this before printing!
 \begin{document}
     \pagenumbering{gobble} % remove page numbering for content pages
     \maketitle
@@ -101,6 +108,10 @@
     \newpage
     \pagenumbering{arabic} % re-add page numbering
     \begin{multicols*}{2}
-        
+        % weight of sign bit is - 2 to the power of n - 1 (for 2s)
+        % - 2 to the power of n - 1 - 1 (for 1s)
+        % signs different no need to worry about overflow
+        % excess-n -> n = 2^n - 1
+        \input{number-systems.tex}
     \end{multicols*}
 \end{document}
