@@ -1,0 +1,134 @@
+An \textbf{instruction set architecture} (ISA) is an abstraction on the interface between
+hardware and low-level software.
+
+MIPS is one such ISA, which runs on a \textbf{processor}.
+
+Processors are connected to \textbf{memory} (RAM) via a \textbf{bus},
+across which code and data is transferred.
+
+\section{Registers}
+Memory access is slow. To avoid frequent memory access, temporary values are stored in the processor
+in \textbf{registers}, which are limited in number.
+
+Registers \textit{do not have data types}, unlike program variables.
+Instructions always assume that the data stored in a register is of the correct type.
+
+MIPS has \textbf{32 registers}, which are referred to by \textit{number} or \textit{name}:
+
+\begin{tabularx}{\linewidth}{|l|l|X|} \hline
+     \textbf{name} & \textbf{\#} & \textbf{usage} \\ \hline
+     \code{\$zero} & \code{0} & constant value zero \\ \hdashline
+     \code{\$at} & \code{1} & reserved for the assembler \\ \hdashline
+     \code{\$v0} - \code{\$v1} & \code{2} - \code{3} & values for results and expression evaluation \\
+     \code{\$a0} - \code{\$a3} & \code{4} - \code{7} & arguments \\
+     \code{\$t0} - \code{\$t7} & \code{8} - \code{15} & temporaries \\
+     \code{\$s0} - \code{\$s7} & \code{16} - \code{23} & program variables \\
+     \code{\$t8} - \code{\$t9} & \code{24} - \code{25} & temporaries \\ \hdashline
+     \code{\$k0} - \code{\$k1} & \code{26} - \code{27} & reserved for the OS \\ \hdashline
+     \code{\$gp} & \code{28} & global pointer \\
+     \code{\$sp} & \code{29} & stack pointer \\
+     \code{\$fp} & \code{30} & frame pointer \\
+     \code{\$ra} & \code{31} & return address \\ \hline
+\end{tabularx}
+
+\section{MIPS Assembly Language}
+The \textbf{general instruction syntax} is as follows:
+
+\begin{tabularx}{\linewidth}{|l|X|} \hline
+    \multicolumn{2}{|c|}{\code{op \$s0, \$s1, \$s2}} \\ \hline
+    & \textbf{description} \\ \hline
+    \code{op} & operation \\
+    \code{\$s0} & destination register \\
+    \code{\$s1} & source register 1 \\
+    \code{\$s2} & source register 2 \\ \hline
+\end{tabularx}
+
+Each instruction executes a \textit{single} command.
+Each line of assembly code contains \textit{at most} one instruction.
+
+Almost all MIPS operations are \textit{register-to-register}
+
+The \# hex synbol is used for comments.
+
+\subsection{Arithmetic Instructions}
+\begin{tabularx}{\linewidth}{|ll|X|} \hline
+    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
+    \code{add} & \code{\$s0, \$s1, \$s2} & \code{\$s0 = \$s1 + \$s2} \\
+    \code{sub} & \code{\$s0, \$s1, \$s2} & \code{\$s0 = \$s1 - \$s2} \\ \hdashline
+    \code{addi} & \code{\$s0, \$s0, <k>} & \code{\$s0 = \$s0 + <k>} \\ \hdashline
+    \code{move} & \code{\$s0, \$s1} & \textbf{pseudo-instruction} for \code{\$s0 = \$s1}, equivalent to \code{add \$s0, \$s1, \$zero} \\ \hline
+\end{tabularx}
+
+The constants \code{<k>} in \textbf{immediate operations} such as \code{addi} range from
+\code{$-2^{15}$} to \code{$2^{15} - 1$}, as the 16-bit 2s complement system is used.
+
+However, if 32-bit constants are required, use the \code{lui} operation to load the most-significant (leftmost) 16-bits
+first, followed by an \code{ori} operation to set the least-significant 16-bits.
+
+There is no \code{subi} operation as its equivalent to \code{addi} with a negative constant.
+
+Use the \textbf{temporary registers} \code{\$t0} to \code{\$t9} to store intermediate results
+in complex expressions.
+
+\subsection{Logical Instructions}
+\begin{tabularx}{\linewidth}{|ll|X|} \hline
+    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
+    \code{sll} & \code{\$t2, \$s0, <k>} & \code{\$t2 = \$s0 << <k>}, equivalent to \code{t2 *= $2^{\code{<k>}}$} \\
+    \code{srl} & \code{\$t2, \$s0, <k>} & \code{\$t2 = \$s0 >> <k>}, equivalent to \code{t2 /= $2^{\code{<k>}}$} \\ \hdashline
+    \code{and} & \code{\$t0, \$t1, \$t2} & bitwise \code{AND}, where \code{\$t2} is the \textbf{bit-mask} \\ 
+    \code{or} & \code{\$t0, \$t1, \$t2} & bitwise \code{OR}, to force certain bits to \code{1} \\ 
+    \code{nor} & \code{\$t0, \$t1, \$t2} & bitwise \code{NOR}, only \code{1} if neither bits are \code{0} \\ 
+    \code{xor} & \code{\$t0, \$t1, \$t2} & bitwise \code{XOR}, only \code{1} if both bits are different \\  \hdashline
+    \code{andi} & \code{\$t0, \$t1, <k>} & bitwise \code{AND} with a constant \code{k} \\ 
+    \code{ori} & \code{\$t0, \$t1, <k>} & bitwise \code{OR} with a constant \code{k} \\
+    \code{xori} & \code{\$t0, \$t1, <k>} & bitwise \code{XOR} with a constant \code{k} \\ \hline
+\end{tabularx}
+
+In bitshift operations (\code{sll} and \code{srl}), the empty positions are filled with zeros.
+
+There is no \code{not} operation as its equivalent to \code{nor <dest> <src> \$zero}.
+
+There is no \code{nori} operation as it is rarely used, and not adding it keeps the processor design simple.
+
+\subsection{Memory Instructions}
+Memory can be thought of as a \textit{single-dimensional array} of memory location, with each
+having an \textbf{address}.
+
+Memory addresses allow access to \textit{bytes} of data, or \textbf{words} of data, which are usually
+$2^n$ bytes --- the common unit of transfer between the processor and memory.
+
+\textbf{Word alignment} occurs in memory when words begin at a \textit{byte address} which is a
+multiple of the word size --- $2^n$ bytes.
+
+In MIPS, each word is 32 bits (4 bytes), and addresses are 32-bits long --- such that $2^{30}$ words are addressable,
+each of which differing by 4.
+
+\begin{tabularx}{\linewidth}{|ll|X|} \hline
+    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
+    \code{lw} & \code{\$dst, k(\$src)} & loads word at \code{Mem[*src + k]} into register \code{\$dst} \\
+    \code{sw} & \code{\$src, k(\$dst)} & stores word in register \code{\$src} into \code{Mem[*dst + k]} \\ \hdashline
+    \code{lb} & \code{\$dst, k(\$src)} & loads byte at \code{Mem[*src + k]} into register \code{\$dst} \\
+    \code{sb} & \code{\$src, k(\$dst)} & stores byte in register \code{\$src} into \code{Mem[*dst + k]} \\ \hdashline
+    \code{ulw} & \code{\$dst, k(\$src)} & psuedo-instruction for loading unaligned words \\
+    \code{usw} & \code{\$src, k(\$dst)} & psuedo-instruction for storing unaligned words \\ \hline
+\end{tabularx}
+
+Memory operations the only operations which can access data in memory, but there are others
+which are less frequently used that are not listed here.
+
+Unlike in \code{lw} and \code{sw}, the displacement constants \code{k} for \code{lb} and \code{sb}
+do not need to be multiples of 4.
+
+\subsection{Control Flow Instructions}
+\begin{tabularx}{\linewidth}{|ll|X|} \hline
+    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
+    \code{beq} & \code{\$r1, \$r2, label} & goes to the labelled statement if \code{*r1 == *r2} \\
+    \code{bne} & \code{\$r1, \$r2, label} & goes to the labelled statement if \code{*r1 != *r2} \\ \hdashline
+    \code{j} & \code{label} & goes to the labelled statement unconditionally \\ \hdashline
+    \code{slt} & \code{\$dst, \$s1, \$s2} & \code{*dst = *s1 < *s2 ?\linebreak 1 : 0} \\
+    \code{slti} & \code{\$dst, \$src, k} & \code{*dst = *src < k ?\linebreak 1 : 0} \\ \hline
+\end{tabularx}
+
+Labels are written as \code{<label>:} to the left of a statement.
+
+A \code{j} instruction is equivalent to \code{beq \$s0 \$s0, <label>}.
