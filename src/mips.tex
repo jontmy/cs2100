@@ -1,3 +1,4 @@
+\part{MIPS}
 An \textbf{instruction set architecture} (ISA) is an abstraction on the interface between
 hardware and low-level software.
 
@@ -84,7 +85,8 @@ in complex expressions.
     \code{xori} & \code{\$t0, \$t1, <k>} & bitwise \code{XOR} with a constant \code{k} \\ \hline
 \end{tabularx}
 
-In bitshift operations (\code{sll} and \code{srl}), the empty positions are filled with zeros.
+In bitshift operations (\code{sll} and \code{srl}), the empty positions are filled with zeros, and the
+\textbf{shift amount} is limited to \textbf{5 bits}.
 
 There is no \code{not} operation as its equivalent to \code{nor <dest> <src> \$zero}.
 
@@ -124,11 +126,140 @@ do not need to be multiples of 4.
     \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
     \code{beq} & \code{\$r1, \$r2, label} & goes to the labelled statement if \code{*r1 == *r2} \\
     \code{bne} & \code{\$r1, \$r2, label} & goes to the labelled statement if \code{*r1 != *r2} \\ \hdashline
-    \code{j} & \code{label} & goes to the labelled statement unconditionally \\ \hdashline
-    \code{slt} & \code{\$dst, \$s1, \$s2} & \code{*dst = *s1 < *s2 ?\linebreak 1 : 0} \\
-    \code{slti} & \code{\$dst, \$src, k} & \code{*dst = *src < k ?\linebreak 1 : 0} \\ \hline
+    \code{j} & \code{label} & jumps to the labelled statement \\ \hdashline
+    \code{slt} & \code{\$dst, \$s1, \$s2} & \code{*dst = *s1 < *s2 ?  1 : 0} \\
+    \code{slti} & \code{\$dst, \$src, k} & \code{*dst = *src < k ? 1 : 0} \\ \hline
 \end{tabularx}
 
 Labels are written as \code{<label>:} to the left of a statement.
 
 A \code{j} instruction is equivalent to \code{beq \$s0 \$s0, <label>}.
+
+The \textbf{program counter} (\code{PC}) typically stores the address of the \textit{next} address to be executed,
+and has to be modified by the branching and jump instructions.
+
+
+\section{Instruction Encoding}
+Every MIPS instruction is \textbf{32 bits} in 3 possible formats:
+
+\begin{tblr}{|llll|} \hline
+    \textbf{format} & {\textbf{source} \\ \textbf{registers}} & {\textbf{destination} \\ \textbf{registers}} & {\textbf{immediate} \\ \textbf{values}} \\ \hline
+    R & 2 & 1 & 0 \\
+    J & 1 & 1 & 1 \\
+    I & 0 & 0 & 1 \\ \hline
+\end{tblr}
+
+\subsection{R-format}
+\begin{tblr}{|X|l|l|l|l|l|l|} \hline
+    & \code{opcode} & \code{rs} & \code{rt} & \code{rd} & \code{shamt} & \code{funct} \\ \hline
+    bits & 6 & 5 & 5 & 5 & 5 & 6 \\ \hline
+\end{tblr}
+
+\begin{itemize}
+    \item \code{opcode := 0} for all R-format instructions,
+    \item \code{funct} determines the instruction,
+    \item \code{shamt := 0}, \code{rd := arith(rs, rt)} for non-shift (arithmetic) instructions, and,
+    \item \code{rs := 0}, \code{rd := shift(rt, shamt)} for shift instructions.
+\end{itemize}
+
+\subsection{I-format}
+\begin{tblr}{|l|l|l|l|X|} \hline
+    & \code{opcode} & \code{rs} & \code{rt} & \code{immediate} \\ \hline
+    bits & 6 & 5 & 5 & 16 \\ \hline
+\end{tblr}
+
+\begin{itemize}
+    \item \code{opcode} determines the instruction since there is no \code{funct} field,
+    \item \code{rt} determines the \textit{destination} register since there is no \code{rd} field,
+    \item \code{immediate} is a \textit{signed} integer in 2s complement except for bitwise operations where it is \textit{unsigned},
+    \item \code{rt := op(rs, immediate)} in general for all non-branching instructions, and,
+    \item \code{PC := (PC + 4) + (immediate * 4)} when branching, otherwise \code{PC += 4}, which is the next instruction.
+\end{itemize}
+
+For branching instructions, \code{immediate} is the offset from the \textit{next} instruction
+to the label of the \textit{target} instruction.
+
+\code{PC} is incremented in multiples of 4 due to word-alignment, which also means that
+we can now branch $2^{15} \times 4 = 2^{17}$ bytes away from \code{PC}.
+
+\subsection{J-format}
+\begin{tblr}{|l|l|X|} \hline
+    & \code{opcode} & \code{target address} \\ \hline
+    bits & 6 & 26 \\ \hline
+\end{tblr}
+
+The last 2 bits of every instruction are always \code{00} due to word-alignment,
+so we leave them out of the target address.
+
+This leaves with an effective range of 28 bits for the target address, and the remaining 4 bits
+are derived from the most significant (leftmost) bits of \code{PC + 4}.
+
+The \textbf{destination address} is therefore:
+
+\begin{tblr}{|l|l|X|l|} \hline
+    & \code{(PC+4)[0:4]} & \code{target address} & \code{00} \\ \hline
+    bits & 4 & 26 & 2 \\ \hline
+\end{tblr}
+
+This creates a maximum jump range of 256 MB.
+
+
+\subsection{Addressing Modes}
+Addressing modes are used to calculate the address of an operand.
+
+\begin{enumerate}[itemsep=0.5em]
+    \item \textbf{register addressing} --- \code{add, xor, etc.}: \\ operand is a register
+    \item \textbf{immediate addresssing} --- \code{addi, andi, etc.}: \\ operand is a constant within the instruction
+    \item \textbf{base/displacement addressing} --- \code{lw, sw} : \\ operand is a memory location at the address the sum of a register and a constant in the instruction
+    \item \textbf{PC-relative addressing} --- \code{beq, bne}: \\ address is the sum of the \code{PC} and a constant in the instruction
+    \item \textbf{psuedo-direct addressing} --- \code{j}: \\ part of the instruction concantenated with part of the \code{PC}
+\end{enumerate}
+
+
+\section{Aside: Instruction Set Architecture}
+ISAs have two major design philosophies:
+
+\begin{enumerate}[itemsep=0.5em]
+    \item \textbf{CISC} --- Complex Instruction Set Computer:\vspace{0.3em}
+    \begin{itemize}
+        \item single instructions for complex operations
+        \item smaller program sizes
+        \item complex implementation, little room for hardware optimization
+    \end{itemize}
+    \item \textbf{RISC} --- Reduced Instruction Set Computer:\vspace{0.3em}
+    \begin{itemize}
+        \item smaller and simpler instruction set
+        \item software combines simpler operations to implement high-level language statements
+        \item room for compiler optimization
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Data Storage Architecture}
+There are several common designs:
+
+\begin{enumerate}[itemsep=0.5em]
+    \item \textbf{stack architecture}: \\ operands are implcitly popped from the stack
+    \item \textbf{accumulator architecture}: \\ one operand is implcitly stored in an accumulator
+    \item \textbf{general-purpose register architecture}: \\ operands are stored explicitly in registers, operations are register-memory or register-register
+    \item \textbf{memory-memory architecture}: \\ operands are read from memory
+\end{enumerate}
+
+\subsection{Memory Architecture}
+Memory transfer takes place across buses:
+
+\begin{enumerate}
+    \item \textbf{address bus}: $k$-bits, uni-directional from processor to memory
+    \item \textbf{data bus}: $n$-bits, bi-directional
+    \item \textbf{control lines}: bi-directional, e.g. read/write controls
+\end{enumerate}
+
+The address bus feeds addresses from the \textbf{memory address register} to the memory.
+
+Data is written to or read from the \textbf{memory data register}, depending on the R/W control line.
+
+\textbf{Endianness} is the relative ordering of the \textit{bytes} in a word (\textit{not} the bits in a byte!) in memory:
+
+\begin{itemize}
+    \item \textbf{big-endian}: MSB stored in smallest address
+    \item \textbf{little-endian}: LSB stored in smallest address
+\end{itemize}
