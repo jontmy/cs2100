@@ -145,8 +145,8 @@ Every MIPS instruction is \textbf{32 bits} in 3 possible formats:
 \begin{tblr}{|llll|} \hline
     \textbf{format} & {\textbf{source} \\ \textbf{registers}} & {\textbf{destination} \\ \textbf{registers}} & {\textbf{immediate} \\ \textbf{values}} \\ \hline
     R & 2 & 1 & 0 \\
-    J & 1 & 1 & 1 \\
-    I & 0 & 0 & 1 \\ \hline
+    I & 1 & 1 & 1 \\
+    J & 0 & 0 & 1 \\ \hline
 \end{tblr}
 
 \subsection{R-format}
@@ -263,3 +263,189 @@ Data is written to or read from the \textbf{memory data register}, depending on 
     \item \textbf{big-endian}: MSB stored in smallest address
     \item \textbf{little-endian}: LSB stored in smallest address
 \end{itemize}
+
+
+\section{Datapath}
+\textit{A collection of components that process data, and perform arithmetic, logical, and memory operations.}
+
+The \textbf{instruction execution cycle} has 5 stages:
+\begin{enumerate*}
+    \keyitem{fetch}{get instruction from memory, address in \code{PC}}
+    \keyitem{decode and operand fetch}{determine the operation and get the operands needed}
+    \keyitem{execute (ALU)}{perform the computations to get a result}
+    \keyitem{execute (memory access)}{read from or write to memory if necessary}
+    \keyitem{write-back}{store the result of the operation}
+\end{enumerate*}
+
+\subsection{Fetch}
+There are 3 steps in the fetch stage:
+\begin{enumerate}
+    \item Use \code{PC} to fetch the instruction from memory.
+    \item Increment \code{PC} by 4 to get the address of the next instruction.
+    \item Feed the output instruction to the decode stage.
+\end{enumerate}
+
+The \textbf{instruction memory} element is a \textbf{sequential circuit} with an internal
+state which stores the instructions.
+
+When supplied an instruction address $m$, it outputs the content at address $m$.
+
+The \textbf{adder} element takes in the 32-bit \code{PC} and the 32-bit constant 4, 
+and outputs the 32-bit sum \code{PC + 4}.
+
+The \textbf{clock signal} is a \textit{square wave} with \textit{rising} and \textit{falling} edges,
+and a period controlled by the CPU.
+
+\code{PC} is read in the first half of the \textbf{clock period} and updated
+at the \textit{next rising clock edge}.
+
+\subsection{Decode}
+There are 3 steps in the decode stage:
+\begin{enumerate}
+    \item Read the \code{opcode} to determine the instruction type and field lengths.
+    \item Read data from all necessary registers.
+    \item Feed the operation and operands to the ALU stage.
+\end{enumerate}
+
+The \textbf{register file} element is a collection of 32 registers which can be read from or written to.
+
+\begin{tblr}{|X|l|X|l|} \hline
+    \textbf{input} & \textbf{bits} & \textbf{output} & \textbf{bits} \\ \hline
+    read register 1 & 5 & read data 1 & 32 \\
+    read register 2 & 5 & read data 2 & 32 \\ \hline[dashed]
+    write register & 5 \\
+    write data & 32 \\ \hline
+\end{tblr}
+
+The \textbf{\code{RegWrite}} control signal determines whether the instruction
+should read from or write to the registers:
+
+\begin{tblr}{|l|l|X|} \hline
+    & \textbf{\code{RegWrite}} & \textbf{registers per instruction} \\ \hline
+    \code{read} & \code{0} & $\le 2$ \\ \hline[dashed]
+    \code{write} & \code{1} & $\le 1$ \\ \hline
+\end{tblr}
+
+\subsubsection{\code{R}-format Decoding}
+The binary content \code{(Inst)} of R-format instructions map to the inputs as follows:
+\begin{itemize}
+    \item \code{rs $\equiv$ Inst[25:21] $\mapsto$ rr1}
+    \item \code{rt $\equiv$ Inst[20:16] $\mapsto$ rr2}
+    \item \code{rd $\equiv$ Inst[15:11] $\mapsto$ wr}
+\end{itemize}
+
+\subsubsection{\code{I}-format Decoding}
+For I-format instructions, 2 problems arise:
+\begin{enumerate}
+    \item \code{rt}, not part of \code{imm}, needs to be fed to \code{wr}
+    \item \code{imm} needs to be fed to the ALU, not \code{rd2}
+\end{enumerate}
+
+A \textbf{multiplexer} chooses the correct \code{Inst} slice to feed to \code{wr}
+using the control signal \textbf{\code{RegDst}}:
+
+\begin{tblr}{|l|l|X|} \hline
+    & \textbf{\code{RegDst}} & \textbf{input to \code{wr}} \\ \hline
+    \code{I}-format & \code{0} & \code{rt $\equiv$ Inst[20:16]} \\ \hline[dashed]
+    \code{R}-format & \code{1} & \code{rd $\equiv$ Inst[15:11]} \\ \hline
+\end{tblr}
+
+\begin{itemize}
+    \item \code{rs $\equiv$ Inst[25:21] $\mapsto$ rr1}
+    \item \code{rt $\equiv$ Inst[20:16] $\mapsto$ rr2}
+    \item \code{rt $\equiv$ Inst[20:16] $\mapsto$ wr}
+\end{itemize}
+
+Another multiplexer chooses the correct 32-bit binary data to feed into the ALU:
+
+\begin{tblr}{|l|l|X|} \hline
+    & \textbf{\code{ALUSrc}} & \textbf{input to\code{ ALU opr2}} \\ \hline
+    {\code{R}-format \\ or \code{beq}} & \code{0} & \code{rr2 $\equiv$ *rt $\equiv$ *Inst[20:16]} \\ \hline[dashed]
+    {\code{I}-format \\ not \code{beq}} & \code{1} & \code{imm $\equiv$ Inst[15:0], sign extended to 32-bits} \\ \hline
+\end{tblr}
+
+\subsection{Arithmetic Logic Unit (ALU)}
+The ALU performs the arithmetic, shifting, logical, memory, and branching operations.
+
+It takes the operation and operands from the decode stage, performs its computation,
+and feeds the result to the memory stage.
+
+\begin{tblr}{|X|l|X|l|} \hline
+    \textbf{input} & \textbf{bits} & \textbf{output} & \textbf{bits} \\ \hline
+    operand 1 & 32 & is zero? & 1 \\
+    operand 2 & 32 & result & 32 \\ \hline
+\end{tblr}
+
+The \textbf{\code{ALUControl}} signal determines the operation to perform:
+
+\begin{tblr}{|c|c|} \hline
+    \textbf{\code{ALUControl}} & \textbf{operation} \\ \hline
+    \code{0000} & \code{and} \\
+    \code{0001} & \code{or} \\
+    \code{0010} & \code{add} \\
+    \code{0110} & \code{sub} \\
+    \code{0111} & \code{slt} \\
+    \code{1100} & \code{nor} \\ \hline
+\end{tblr}
+
+\subsubsection{Branching Instructions}
+A multiplexer chooses between the next instruction \code{(PC + 4)} and the branch 
+target \code{(BT)} using the control signal \textbf{\code{PCSrc}}:
+
+\begin{tblr}{|l|l|X|} \hline
+    & \textbf{\code{PCSrc}} & \textbf{next instruction} \\ \hline
+    \code{false} & \code{0} & \code{PC + 4} \\ \hline[dashed]
+    \code{true} & \code{1} & \code{BT $\equiv$ PC + 4 + imm * 4} \\ \hline
+\end{tblr}
+
+Because both register contents need to be compared,
+the \code{ALUSrc} control value is set to \code{0} for branching instructions.
+
+\code{BT} is computed as follows:
+\begin{enumerate}
+    \item left shift by 2 bits the sign-extended \code{imm} from the decode stage (multiplying the offset by 4)
+    \item add it to \code{PC + 4} from the adder in the fetch stage
+\end{enumerate}
+
+\subsection{Memory}
+Only \code{lw/lb} and \code{sw/sb} instructions operate in this stage,
+the rest remain idle.
+
+The \textbf{data memory} element exists in RAM:
+
+\begin{tblr}{|X|l|X|l|} \hline
+    \textbf{input} & \textbf{bits} & \textbf{output} & \textbf{bits} \\ \hline
+    address \code{(addr)} & 32 & read data \code{(rdt)} & 32 \\ \hline[dashed]
+    write data \code{(wd)} & 32 \\ \hline
+\end{tblr}
+
+\code{addr} is the effective memory address computed by the ALU, and \code{wd}
+is connected to \code{rd2} from the register file from the decode stage.
+
+The control signals \textbf{\code{MemRead}} and \textbf{\code{MemWrite}} control
+the memory operations:
+
+\begin{tblr}{|c|c|X|} \hline
+    \textbf{\code{MemRead}} & \textbf{\code{MemWrite}} & \textbf{action} \\ \hline
+    \code{0} & \code{1} & write \code{wd} into \code{addr} \\ \hline[dashed]
+    \code{1} & \code{0} & read contents of \code{addr} into \code{rdt} \\ \hline
+    \code{0} & \code{0} & do nothing \\ \hline
+    \code{1} & \code{1} & undefined, should not occur \\ \hline
+\end{tblr}
+
+\subsubsection{Non-memory Instructions}
+A multiplexer chooses between the result of the ALU and the read data from memory,
+using the control signal \textbf{\code{MemtoReg}}:
+
+\begin{tblr}{|l|l|X|} \hline
+    & \textbf{\code{MemToReg}} & \textbf{output} \\ \hline
+    non-memory instruction & \code{0} & ALU output \\ \hline[dashed]
+    memory instruction & \code{1} & read data \\ \hline
+\end{tblr}
+
+This output is fed to the write-back stage.
+
+\subsection{Write-back}
+Stores, branches, and jumps remain idle in this stage as there is nothing to be written.
+
+The result of the memory stage is fed into write data \code{(wd)} of the register file.
