@@ -97,6 +97,9 @@
 % Custom commands
 \newcommand{\pageline}[1]{\par\noindent\rule{\textwidth}{#1}} % horizontal lines across a page
 \newcommand{\quoted}[1]{\textquotedblleft{#1}\textquotedblright} % proper double quotes
+\newcommand{\convert}{\text{$\;\Longleftrightarrow\;\;$}}
+\renewcommand{\to}{\text{$\;\Longrightarrow\;\;$}}
+\newcommand{\from}{\text{$\;\Longleftarrow\;\;$}}
 \NewDocumentCommand{\keyitem}{smm}{\item \textbf{#2}: \IfBooleanF{#1}{\\ }#3} % bolded keywords in list environments, use * for no newline separation
 
 % Custom environments
@@ -133,6 +136,14 @@
     \setlength{\parskip}{0.5em}
     \vspace{-\parskip}
 }{\end{thm*}}
+\newenvironment{defn*}[1]{
+    \begin{thm*}{#1}\color{body}
+    \setlength{\abovedisplayskip}{0pt}
+    \setlength{\belowdisplayskip}{0.75em}
+    \setlength{\abovedisplayshortskip}{0pt}
+    \setlength{\belowdisplayshortskip}{0.75em}
+    \setlength{\parskip}{0.5em}
+}{\end{thm*}}
 
 \color{body}
 \pagecolor{background}
@@ -154,7 +165,7 @@
     \newpage
     \pagenumbering{arabic} % re-add page numbering
     \begin{multicols*}{2}
-        \include{number-systems.tex}
-        \include{mips.tex}
+        \input{number-systems.tex}
+        \input{mips.tex}
     \end{multicols*}
 \end{document}

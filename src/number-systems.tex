@@ -1,99 +1,172 @@
 \part{Data Representation}
+Data is represented as a sequence of \textbf{bits} --- \code{0} or \code{1}.
+
+8 bits form a \textbf{byte}, and a fixed multiple of bytes in a computer architecture
+forms a \textbf{word}.
+
+\begin{defn}{number of bits \convert number of values}
+    $n$ bits can represent up to $2^n$ values.
+
+    Conversely, we need at least $\lceil \log_2 m \rceil$ bits to represent $m$ values.
+\end{defn}
 
 \section{Number Systems}
-Any base-$R$ number system is \textbf{weighted-positional}.
+Number systems are \textbf{weighted-positional} systems, with
+the \textbf{decimal} number system having a \textbf{base} (or \textbf{radix}) of 10.
 
-The \textbf{decimal} number system has a \textbf{base} (or \textbf{radix}) of 10.
+\begin{tblr}{|lll|} \hline
+    \textbf{number system} & \textbf{base} & \textbf{prefix} \\ \hline
+    binary & \code{2} & \code{0b} \\
+    octal & \code{8} & \code{0} \\ \hline[dashed]
+    decimal & \code{10} & --- \\ \hline[dashed]
+    hexadecimal & \code{16} & \code{0x} \\ \hline
+\end{tblr}
 
-Every digit going leftward from the decimal point has a weighted power of 10, starting from $10^0$ and increasing.
+The digit to the left of the decimal point has a weight of $10^0$, with the exponent
+\textit{incrementing} leftward and \textit{decrementing} rightward.
 
-Every digit going rightward from the decimal point has a weighted power of 10, starting from $10^{-1}$ and decreasing.
+\begin{defn}{decimal \to binary}
+    For \textit{whole numbers}, use \textbf{repeated division-by-two}:
+    \begin{enumerate}
+        \item divide the value by 2, and record the remainder
+        \item prepend the remainder to the binary representation
+        \item repeat until the value is 0
+    \end{enumerate}
 
-This generalizes to any base-$R$ number system, with $R^i$ in place of $10^i$.
+    For \textit{fractions}, use \textbf{repeated multiplication-by-two}:
+    \begin{enumerate}
+        \item multiply the value by 2, and record the carry
+        \item append the carry to the binary representation
+        \item repeat until the value is 1
+        \item append the 1 to the binary representation
+    \end{enumerate}
+\end{defn}
 
-\subsection{Conversions between Bases}
-We use the decimal system as an intermediary to convert between bases.
+\begin{defn}{binary \to decimal}
+    Use \textbf{weighted summation}:
+    \begin{enumerate}
+        \item assign the digit to the left of the binary point a weight of $2^0$
+        \item increment the weight exponents leftward 
+        \item decrement the weight exponents rightward
+        \item multiply each digit by its weight
+        \item sum the products
+    \end{enumerate}
+\end{defn}
 
-For example, to convert between base-2 (\textbf{binary}) to base-7, we first convert to base-10, then convert to base-7.
+These conversions generalize to any base!
 
-We can use grouping and/or ungrouping to convert between bases which are powers of 2.
+Converting between 2 bases can be done with base-10 as an intermediary.
 
-For example, to convert between base-2 and base-16 (\textbf{hexadecimal}), we partition the digits of the binary
-number in groups of 4, starting from the binary point, and partitioning outward.
+\begin{defn*}{binary \convert base-$2^k$}
+    \begin{enumerate}
+        \item partition the binary representation into $k$-bit chunks outward from the binary point
+        \item convert each chunk to base-10
+        \item convert each base-10 value to base-$2^k$
+    \end{enumerate}
 
-\subsubsection{Base-\textit{R} $\Rightarrow$ Decimal}
-The decimal equivalent of a base-$R$ number is the sum of its weighted digits.
-
-\subsubsection{Decimal $\Rightarrow$ Base-\textit{R}}
-This conversion performs \textbf{division-by-\textit{R}} for the whole number portion,
-and \textbf{multiplication-by-\textit{R}} for the fractional portion.
-
-Division-by-$R$ divides the whole number by $R$ until the quotient is 0.
-The result is produced from the remainders from \textbf{right to left}.
-
-Multiplication-by-$R$ multiplies the fractional portion by $R$ until the product is 0, or until the desired number of decimal places.
-The result is produced from the \textbf{carries} \textbf{left to right}.
+    Apply the reverse direction for converting from base-$2^k$ to binary.
+\end{defn*}
 
 \subsection{Negative Numbers}
 \textbf{Signed numbers} include all positive and negative values, unlike \textbf{unsigned numbers} which
-only include positive values.
+only include non-negative values.
 
-There are 4 representations for signed binary numbers covered in this module.
+We will consider $n$-bit values in this section.
 
-\subsubsection{Sign-and-Magnitude}
-\emph{Negate a number by inverting the sign bit.}
+\begin{defn}{sign-and-magnitude}
+    The MSB is the \textbf{sign bit} --- \code{0} for positive, \code{1} for negative.
 
-This representation uses the leftmost (most-significant bit) as the \textbf{sign bit} --- 1 for negative, 0 for positive.
+    Negate a value by inverting the sign bit.
 
-This results in \textbf{duplicate zeros} (positive and negative), and a range of values of $-\left(2^{n-1} - 1\right)$ to $2^{n-1}-1$.
+    \begin{itemize}
+        \keyitem*{range}{$-2^{n-1} + 1$ to $2^{n-1} - 1$}
+        \keyitem*{zeros}{$-0_{10}$ and $+0_{10}$}
+    \end{itemize}
+\end{defn}
 
-\subsubsection{1s Complement}
-\emph{Negate a number by inverting each bit.}
+\begin{defn}{1s complement}
+    An $n$-bit number $x$ has a negated value $-x = 2^n - x - 1$.
 
-An $n$-bit number $x$ has a negated value $-x = 2^n - x - 1$.
+    Negate a value by inverting \textit{all the bits}.
 
-This also results in \textbf{duplicate zeros} (positive and negative), and a range of values of $-\left(2^{n-1} - 1\right)$ to $2^{n-1}-1$.
+    \begin{itemize}
+        \keyitem*{range}{$-2^{n-1} + 1$ to $2^{n-1} - 1$}
+        \keyitem*{zeros}{$-0_{10}$ (all \code{1s}) and $+0_{10}$ (all \code{0}s)}
+    \end{itemize}
 
+    The weight of the MSB is $-2^{n-1} + 1$.
+\end{defn}
 
-The weight of the leftmost bit is $-\left(2^{n-1} - 1\right)$.
+\begin{defn}{2s complement}
+    An $n$-bit number $x$ has a negated value $-x = 2^n - x$.
 
-\subsubsection{2s Complement}
-\emph{Negate a number by inverting each bit, then adding 1.}
+    Negate a value by inverting all the bits to the left of the \textit{rightmost} \code{1}.
 
-Alternatively, preserve each bit up to and the rightmost 1,
-then inverting every bit to the left of the rightmost 1.
+    \begin{itemize}
+        \keyitem*{range}{$-2^{n-1}$ to $2^{n-1} - 1$}
+        \keyitem*{zeros}{$0_{10}$ (all \code{0s})}
+    \end{itemize}
 
-An $n$-bit number $x$ has a negated value $-x = 2^n - x$.
+    Unlike sign-and-magnitude and 1s complement, 2s complement does not have duplicate zeros.
 
-This also results in \textbf{no duplicate zeros}, and a range of values of $-2^{n-1}$ to $2^{n-1}-1$.
+    The weight of the MSB is $-2^{n-1}$.
 
-The weight of the leftmost bit is $-2^{n-1}$.
+    The MSB also represents the sign  --- \code{0} for positive, \code{1} for negative.
+\end{defn}
 
-\subsubsection{Excess Representation}
-\emph{Distribute positive and negative values by a simple addition or subtraction.}
+Negating a fractional number in a complement representation is no different
+than negating a whole number!
 
-Excess-$k$ subtracts $k$ from the decimal value of the number, while preserving its base-2 representation.
+\begin{defn}{excess representation}
+    Distribute positive and negative values by a simple addition or subtraction by $k$,
+    which is also known as the \textbf{bias}.
+    
+    $k$ is typically $2^n - 1$ for an $n$-bit number.
 
-To convert from a decimal value to its excess-$k$ representation, we add $k$ to the decimal value and convert that to base-2.
+    The binary value in excess-$k$ \textit{subtracts} $k$ from its decimal value.
 
-Typically, for an $n$-bit number, $k = 2^n - 1$.
+    Conversely, the decimal value in excess-$k$ \textit{adds} $k$ to its binary value.
+\end{defn}
+
+\subsection{Overflow}
+\textbf{Overflow} occurs when addition or subtraction goes beyond the fixed range of a signed number.
+
+Subtraction is equivalent to addition of the negated value.
+
+Note that in 1s addition, the carry out of the MSB is \textit{added} to the result,
+but this carry out is \textit{discarded} in 2s addition.
+
+\begin{defn}{detecting overflow}
+    If the MSB (sign bit) of the result is different from the MSBs of the operands,
+    then overflow has occurred.
+
+    Note that overflow can only occur when the operands have the same sign,
+    i.e., adding a negative number to a positive number will \textit{never} result
+    in overflow.
+\end{defn}
 
 \subsection{Real Numbers}
+\textbf{Fixed-point representation} fixes the number of bits for the whole number and fractional parts,
+which limits the range of values.
 
-\textbf{Fixed-point representation} allocates a fixed number of bits for the whole number and fractional parts.
-
-This results in a limited range of numbers that can be represented.
-
-The IEEE 754 \textbf{floating point representation} resolves this by allocating a fixed number of bits to the
+The IEEE 754 \textbf{floating-point representation} resolves this by allocating a fixed number of bits to the
 \textbf{sign}, \textbf{exponent}, and \textbf{mantissa}.
 
-\begin{tabular}{l|l|l|l|l|l}
-    precision & bits & sign & exponent & mantissa & bias \\\hline
-    single & 32 & 1 & 8 & 23 & 127 \\
-    double & 64 & 1 & 11 & 52 & 1023 \\
-\end{tabular}
-
-The \textbf{sign bit} is 0 for positive numbers, and 1 for negative numbers.
+\begin{tblr}{|llllll|} \hline
+    \textbf{precision} & \textbf{bits} & \textbf{sign} & \textbf{exp.} & \textbf{mantissa} & \textbf{bias} \\\hline
+    single & 32 & 1 & 8 & 23 & 127 \\ \hline[dashed]
+    double & 64 & 1 & 11 & 52 & 1023 \\ \hline
+\end{tblr}
 
 The \textbf{mantissa} is \textbf{normalized} with an implicit leading 1 bit, e.g. $110.1_2$ is normalized to
 $1.101_2 \times 2^2$, and only $101$ is stored in the mantissa.
+
+\begin{defn*}{decimal \to IEEE 754 floating-point representation}
+    \begin{enumerate}
+        \item convert the decimal value to normalized binary, i.e., $\pm 1.xxx \times 2^y$
+        \item determine the sign bit --- \code{0} for positive, and \code{1} for negative
+        \item add the bias to the exponent $y$ --- $+127$ for single precision, and $+1023$ for double precision
+        \item convert the exponent to binary
+        \item concatenate the sign bit, exponent, and mantissa $xxx$
+    \end{enumerate}
+\end{defn*}
