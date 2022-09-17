@@ -165,7 +165,13 @@
     \newpage
     \pagenumbering{arabic} % re-add page numbering
     \begin{multicols*}{2}
-        \input{number-systems.tex}
-        \input{mips.tex}
+        \part{Data Representation}
+            \input{number-systems.tex}
+        \part{Instruction Set Architecture}
+            \input{isa.tex}
+        \part{MIPS}
+            \input{mips.tex}
+            \input{datapath.tex}
+            \input{control.tex}
     \end{multicols*}
 \end{document}

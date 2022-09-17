@@ -1,0 +1,72 @@
+\section{ISA Overview}
+
+An \textbf{instruction set architecture} (ISA) is an abstraction on the interface between
+hardware and low-level software, which runs on a \textbf{processor}.
+
+Processors are connected to \textbf{memory} (RAM) via a \textbf{bus},
+across which code and data is transferred.
+
+ISAs have two major design philosophies:
+
+\begin{enumerate}[itemsep=0.5em]
+    \item \textbf{CISC} --- Complex Instruction Set Computer:\vspace{0.3em}
+    \begin{itemize}
+        \item single instructions for complex operations
+        \item smaller program sizes
+        \item complex implementation, little room for hardware optimization
+    \end{itemize}
+    \item \textbf{RISC} --- Reduced Instruction Set Computer:\vspace{0.3em}
+    \begin{itemize}
+        \item smaller and simpler instruction set
+        \item software combines simpler operations to implement high-level language statements
+        \item room for compiler optimization
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Data Storage Architecture}
+\begin{enumerate}[itemsep=0.5em]
+    \item \textbf{stack architecture}: \\ operands are implcitly popped from the stack
+    \item \textbf{accumulator architecture}: \\ one operand is implcitly stored in an accumulator
+    \item \textbf{general-purpose register architecture}: \\ operands are stored explicitly in registers, operations are register-memory or register-register
+    \item \textbf{memory-memory architecture}: \\ operands are read from memory
+\end{enumerate}
+
+\subsection{Memory Architecture}
+Memory transfer takes place across buses:
+
+\begin{enumerate}
+    \item \textbf{address bus}: $k$-bits, uni-directional from processor to memory
+    \item \textbf{data bus}: $n$-bits, bi-directional
+    \item \textbf{control lines}: bi-directional, e.g. read/write controls
+\end{enumerate}
+
+The address bus feeds addresses from the \textbf{memory address register} to the memory.
+
+Data is written to or read from the \textbf{memory data register}, depending on the R/W control line.
+
+\textbf{Endianness} is the relative ordering of the \textit{bytes} in a word (\textit{not} the bits in a byte!) in memory:
+
+\begin{itemize}
+    \item \textbf{big-endian}: MSB stored in smallest address
+    \item \textbf{little-endian}: LSB stored in smallest address
+\end{itemize}
+
+\section{Instruction Set Encoding}
+Instructions consist of an \textbf{opcode} --- a unique code to identify the operation 
+--- as well as \textbf{operands}.
+
+In an ISA with \textbf{fixed-length instructions}, we need to fit multiple sets of instruction
+types each with the same number of bits.
+
+We use the \textbf{expanding opcode} scheme in which the opcode has variable length
+for different instructions.
+
+\begin{defn}{maximizing the total number of instructions}
+    Maximize the number of instructions in each set,
+    starting from the \textit{largest} set to the smallest.
+\end{defn}
+
+\begin{defn}{minimizing the total number of instructions}
+    Maximize the number of instructions in each set,
+    starting from the \textit{smallest} set to the largest.
+\end{defn}

@@ -1,12 +1,3 @@
-\part{MIPS}
-An \textbf{instruction set architecture} (ISA) is an abstraction on the interface between
-hardware and low-level software.
-
-MIPS is one such ISA, which runs on a \textbf{processor}.
-
-Processors are connected to \textbf{memory} (RAM) via a \textbf{bus},
-across which code and data is transferred.
-
 \section{Registers}
 Memory access is slow. To avoid frequent memory access, temporary values are stored in the processor
 in \textbf{registers}, which are limited in number.
@@ -52,45 +43,82 @@ Almost all MIPS operations are \textit{register-to-register}
 The \# hex synbol is used for comments.
 
 \subsection{Arithmetic Instructions}
-\begin{tabularx}{\linewidth}{|ll|X|} \hline
-    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
-    \code{add} & \code{\$s0, \$s1, \$s2} & \code{\$s0 = \$s1 + \$s2} \\
-    \code{sub} & \code{\$s0, \$s1, \$s2} & \code{\$s0 = \$s1 - \$s2} \\ \hdashline
-    \code{addi} & \code{\$s0, \$s0, <k>} & \code{\$s0 = \$s0 + <k>} \\ \hdashline
-    \code{move} & \code{\$s0, \$s1} & \textbf{pseudo-instruction} for \code{\$s0 = \$s1}, equivalent to \code{add \$s0, \$s1, \$zero} \\ \hline
-\end{tabularx}
+\begin{tblr}{|Xll|} \hline
+    \textbf{instruction} & \textbf{format} & \textbf{opcode/funct} \\ \hline
+    \code{add \$rd, \$rs, \$rt} & \code{R} & $\code{0/20}_{\code{hex}}$ \\
+    \code{sub \$rd, \$rs, \$rt} & \code{R} & $\code{0/22}_{\code{hex}}$ \\ \hline[dashed]
+    \code{addi \$rt, \$rs, imm} & \code{I} & $\code{8}_{\code{hex}}$ \\ \hline[dashed]
+    \code{move \$s0, \$s1} & \code{psuedo} & --- \\ \hline
+\end{tblr}
 
-The constants \code{<k>} in \textbf{immediate operations} such as \code{addi} range from
+\begin{defn}{immediate subtraction}
+    There is no \code{subi} operation as it is equivalent to \code{addi} with a negative constant.
+\end{defn}
+
+\begin{defn}{assigning variables}
+    The \code{move} instruction is a \textbf{psuedo-instruction} which is translated into
+    its MIPS equivalent by the compiler:
+
+    \code{add \$s0, \$s1, \$zero}
+
+    To assign a constant \code{imm} to a register:
+
+    \code{addi \$s0, \$zero, imm}
+\end{defn}
+
+The immediate values in \textbf{immediate operations} such as \code{addi} range from
 \code{$-2^{15}$} to \code{$2^{15} - 1$}, as the 16-bit 2s complement system is used.
 
-However, if 32-bit constants are required, use the \code{lui} operation to load the most-significant (leftmost) 16-bits
-first, followed by an \code{ori} operation to set the least-significant 16-bits.
+\begin{defn}{setting large constants}
+    If 32-bit constants are required, use the \code{lui} operation to load the most-significant 16-bits
+    first, followed by an \code{ori} operation to set the least-significant 16-bits:
 
-There is no \code{subi} operation as its equivalent to \code{addi} with a negative constant.
+    \code{lui \$t0, 0xAAAA\phantom{abcdefg}\# t0 = 0xAAAA0000} \linebreak
+    \code{ori \$t0, \$t0, 0xF0F0\phantom{ab}\# t0 = 0xAAAAF0F0}
+\end{defn}
 
 Use the \textbf{temporary registers} \code{\$t0} to \code{\$t9} to store intermediate results
 in complex expressions.
 
 \subsection{Logical Instructions}
-\begin{tabularx}{\linewidth}{|ll|X|} \hline
-    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
-    \code{sll} & \code{\$t2, \$s0, <k>} & \code{\$t2 = \$s0 << <k>}, equivalent to \code{t2 *= $2^{\code{<k>}}$} \\
-    \code{srl} & \code{\$t2, \$s0, <k>} & \code{\$t2 = \$s0 >> <k>}, equivalent to \code{t2 /= $2^{\code{<k>}}$} \\ \hdashline
-    \code{and} & \code{\$t0, \$t1, \$t2} & bitwise \code{AND}, where \code{\$t2} is the \textbf{bit-mask} \\ 
-    \code{or} & \code{\$t0, \$t1, \$t2} & bitwise \code{OR}, to force certain bits to \code{1} \\ 
-    \code{nor} & \code{\$t0, \$t1, \$t2} & bitwise \code{NOR}, only \code{1} if neither bits are \code{0} \\ 
-    \code{xor} & \code{\$t0, \$t1, \$t2} & bitwise \code{XOR}, only \code{1} if both bits are different \\  \hdashline
-    \code{andi} & \code{\$t0, \$t1, <k>} & bitwise \code{AND} with a constant \code{k} \\ 
-    \code{ori} & \code{\$t0, \$t1, <k>} & bitwise \code{OR} with a constant \code{k} \\
-    \code{xori} & \code{\$t0, \$t1, <k>} & bitwise \code{XOR} with a constant \code{k} \\ \hline
-\end{tabularx}
+\begin{tblr}{|Xll|} \hline
+    \textbf{instruction} & \textbf{format} & \textbf{opcode/funct} \\ \hline
+    \code{sll \$rd, \$rt, shamt} & \code{R} & $\code{0/00}_{\code{hex}}$ \\
+    \code{srl \$rd, \$rt, shamt} & \code{R} & $\code{0/02}_{\code{hex}}$ \\ \hline[dashed]
+    \code{and \$rd, \$rs, \$rt} & \code{R} & $\code{0/24}_{\code{hex}}$ \\
+    \code{or \$rd, \$rs, \$rt} & \code{R} & $\code{0/25}_{\code{hex}}$ \\
+    \code{xor \$rd, \$rs, \$rt} & \code{R} & $\code{0/26}_{\code{hex}}$ \\
+    \code{nor \$rd, \$rs, \$rt} & \code{R} & $\code{0/27}_{\code{hex}}$ \\ \hline[dashed]
+    \code{andi \$rt, \$rs, imm} & \code{I} & $\code{C}_{\code{hex}}$ \\
+    \code{ori \$rt, \$rs, imm} & \code{I} & $\code{D}_{\code{hex}}$ \\
+    \code{xori \$rt, \$rs, imm} & \code{I} & $\code{E}_{\code{hex}}$ \\ \hline[dashed]
+    \code{lui \$rt, imm} & \code{I} & $\code{F}_{\code{hex}}$ \\ \hline
+\end{tblr}
+
+Bitwise \code{NOR} sets the result to \code{1} if both bits are \code{0}, and \code{0} otherwise.
+
+Bitwise \code{XOR} sets the result to \code{1} if both bits are different, and \code{0} otherwise.
+
+\begin{defn}{bitwise \code{NOT}}
+    There is no \code{not} operation as it is equivalent to either of the following:
+    \begin{itemize}
+        \item \code{nor \$rd, \$rs, \$zero}
+        \item \code{xor \$rd, \$rs, \$rt}, where \code{\$rt} is all \code{1}s
+    \end{itemize}
+\end{defn}
+
+
+The absence of \code{nori} keeps the instruction set small.
 
 In bitshift operations (\code{sll} and \code{srl}), the empty positions are filled with zeros, and the
 \textbf{shift amount} is limited to \textbf{5 bits}.
 
-There is no \code{not} operation as its equivalent to \code{nor <dest> <src> \$zero}.
+\begin{defn}{multiplication and division}
+    For multiplication/division by $k$, if $k$ is a power of $2$,
+    use \code{sll} and \code{srl} respectively, setting the \code{shamt} to $k$.
 
-There is no \code{nori} operation as it is rarely used, and not adding it keeps the processor design simple.
+    Otherwise, use a loop.
+\end{defn}
 
 \subsection{Memory Instructions}
 Memory can be thought of as a \textit{single-dimensional array} of memory location, with each
@@ -105,33 +133,41 @@ multiple of the word size --- $2^n$ bytes.
 In MIPS, each word is 32 bits (4 bytes), and addresses are 32-bits long --- such that $2^{30}$ words are addressable,
 each of which differing by 4.
 
-\begin{tabularx}{\linewidth}{|ll|X|} \hline
-    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
-    \code{lw} & \code{\$dst, k(\$src)} & loads word at \code{Mem[*src + k]} into register \code{\$dst} \\
-    \code{sw} & \code{\$src, k(\$dst)} & stores word in register \code{\$src} into \code{Mem[*dst + k]} \\ \hdashline
-    \code{lb} & \code{\$dst, k(\$src)} & loads byte at \code{Mem[*src + k]} into register \code{\$dst} \\
-    \code{sb} & \code{\$src, k(\$dst)} & stores byte in register \code{\$src} into \code{Mem[*dst + k]} \\ \hdashline
-    \code{ulw} & \code{\$dst, k(\$src)} & psuedo-instruction for loading unaligned words \\
-    \code{usw} & \code{\$src, k(\$dst)} & psuedo-instruction for storing unaligned words \\ \hline
-\end{tabularx}
+\begin{tblr}{|Xll|} \hline
+    \textbf{instruction} & \textbf{format} & \textbf{opcode/funct} \\ \hline
+    \code{lw \$rt, offset(\$rs)} & \code{I} & $\code{23}_{\code{hex}}$ \\
+    \code{sw \$rt, offset(\$rs)} & \code{I} & $\code{2B}_{\code{hex}}$ \\ \hline[dashed]
+    \code{lb \$rt, offset(\$rs)} & \code{I} & $\code{20}_{\code{hex}}$ \\
+    \code{sb \$rt, offset(\$rs)} & \code{I} & $\code{28}_{\code{hex}}$ \\ \hline[dashed]
+    \code{ulw \$rt, offset(\$rs)} & \code{pseudo} & --- \\
+    \code{usw \$rt, offset(\$rs)} & \code{pseudo} & --- \\ \hline
+\end{tblr}
 
-Memory operations the only operations which can access data in memory, but there are others
-which are less frequently used that are not listed here.
+For the word-aligned memory instructions \code{lw} and \code{sw},
+the resulting address of \code{\$rs + offset} must be a multiple of 4.
 
-Unlike in \code{lw} and \code{sw}, the displacement constants \code{k} for \code{lb} and \code{sb}
-do not need to be multiples of 4.
+The \code{offset} is a 16-bit 2s complement number.
 
 \subsection{Control Flow Instructions}
-\begin{tabularx}{\linewidth}{|ll|X|} \hline
-    \multicolumn{2}{|l|}{\textbf{instruction}} & \textbf{effect} \\ \hline
-    \code{beq} & \code{\$r1, \$r2, label} & goes to the labelled statement if \code{*r1 == *r2} \\
-    \code{bne} & \code{\$r1, \$r2, label} & goes to the labelled statement if \code{*r1 != *r2} \\ \hdashline
-    \code{j} & \code{label} & jumps to the labelled statement \\ \hdashline
-    \code{slt} & \code{\$dst, \$s1, \$s2} & \code{*dst = *s1 < *s2 ?  1 : 0} \\
-    \code{slti} & \code{\$dst, \$src, k} & \code{*dst = *src < k ? 1 : 0} \\ \hline
-\end{tabularx}
+\begin{tblr}{|Xll|} \hline
+    \textbf{instruction} & \textbf{format} & \textbf{opcode/funct} \\ \hline
+    \code{beq \$rs, \$rt, label} & \code{I} & $\code{4}_{\code{hex}}$ \\
+    \code{bne \$rs, \$rt, label} & \code{I} & $\code{5}_{\code{hex}}$ \\ \hline[dashed]
+    \code{j label} & \code{J} & $\code{2}_{\code{hex}}$ \\ \hline[dashed]
+    \code{slt \$rd, \$rs, \$rt} & \code{R} & $\code{0/2A}_{\code{hex}}$ \\
+    \code{slti \$rt, \$rs, imm} & \code{I} & $\code{A}_{\code{hex}}$ \\ \hline[dashed]
+    \code{blt \$rs, \$rt, label} & \code{pseudo} & --- \\
+    \code{bgt \$rs, \$rt, label} & \code{pseudo} & --- \\
+    \code{ble \$rs, \$rt, label} & \code{pseudo} & --- \\
+    \code{bge \$rs, \$rt, label} & \code{pseudo} & --- \\ \hline
+\end{tblr}
 
-Labels are written as \code{<label>:} to the left of a statement.
+\code{slt} and \code{slti} sets the result to \code{1} if \code{\$rs < \$rt} or \code{imm},
+and \code{0} otherwise.
+
+\code{beq} and \code{bne} are \textbf{conditional jumps} --- they jump to the label if the condition is true.
+
+Labels are written as \code{<label>:} to the left of a statement, but they are \textit{not} instructions.
 
 A \code{j} instruction is equivalent to \code{beq \$s0 \$s0, <label>}.
 
@@ -214,326 +250,3 @@ Addressing modes are used to calculate the address of an operand.
     \item \textbf{PC-relative addressing} --- \code{beq, bne}: \\ address is the sum of the \code{PC} and a constant in the instruction
     \item \textbf{psuedo-direct addressing} --- \code{j}: \\ part of the instruction concantenated with part of the \code{PC}
 \end{enumerate}
-
-
-\section{Aside: Instruction Set Architecture}
-ISAs have two major design philosophies:
-
-\begin{enumerate}[itemsep=0.5em]
-    \item \textbf{CISC} --- Complex Instruction Set Computer:\vspace{0.3em}
-    \begin{itemize}
-        \item single instructions for complex operations
-        \item smaller program sizes
-        \item complex implementation, little room for hardware optimization
-    \end{itemize}
-    \item \textbf{RISC} --- Reduced Instruction Set Computer:\vspace{0.3em}
-    \begin{itemize}
-        \item smaller and simpler instruction set
-        \item software combines simpler operations to implement high-level language statements
-        \item room for compiler optimization
-    \end{itemize}
-\end{enumerate}
-
-\subsection{Data Storage Architecture}
-There are several common designs:
-
-\begin{enumerate}[itemsep=0.5em]
-    \item \textbf{stack architecture}: \\ operands are implcitly popped from the stack
-    \item \textbf{accumulator architecture}: \\ one operand is implcitly stored in an accumulator
-    \item \textbf{general-purpose register architecture}: \\ operands are stored explicitly in registers, operations are register-memory or register-register
-    \item \textbf{memory-memory architecture}: \\ operands are read from memory
-\end{enumerate}
-
-\subsection{Memory Architecture}
-Memory transfer takes place across buses:
-
-\begin{enumerate}
-    \item \textbf{address bus}: $k$-bits, uni-directional from processor to memory
-    \item \textbf{data bus}: $n$-bits, bi-directional
-    \item \textbf{control lines}: bi-directional, e.g. read/write controls
-\end{enumerate}
-
-The address bus feeds addresses from the \textbf{memory address register} to the memory.
-
-Data is written to or read from the \textbf{memory data register}, depending on the R/W control line.
-
-\textbf{Endianness} is the relative ordering of the \textit{bytes} in a word (\textit{not} the bits in a byte!) in memory:
-
-\begin{itemize}
-    \item \textbf{big-endian}: MSB stored in smallest address
-    \item \textbf{little-endian}: LSB stored in smallest address
-\end{itemize}
-
-
-\section{Datapath}
-\textit{A collection of components that process data, and perform arithmetic, logical, and memory operations.}
-
-The \textbf{instruction execution cycle} has 5 stages:
-\begin{enumerate*}
-    \keyitem{fetch}{get instruction from memory, address in \code{PC}}
-    \keyitem{decode and operand fetch}{determine the operation and get the operands needed}
-    \keyitem{execute (ALU)}{perform the computations to get a result}
-    \keyitem{execute (memory access)}{read from or write to memory if necessary}
-    \keyitem{write-back}{store the result of the operation}
-\end{enumerate*}
-
-\subsection{Fetch}
-There are 3 steps in the fetch stage:
-\begin{enumerate}
-    \item Use \code{PC} to fetch the instruction from memory.
-    \item Increment \code{PC} by 4 to get the address of the next instruction.
-    \item Feed the output instruction to the decode stage.
-\end{enumerate}
-
-The \textbf{instruction memory} element is a \textbf{sequential circuit} with an internal
-state which stores the instructions.
-
-When supplied an instruction address $m$, it outputs the content at address $m$.
-
-The \textbf{adder} element takes in the 32-bit \code{PC} and the 32-bit constant 4, 
-and outputs the 32-bit sum \code{PC + 4}.
-
-The \textbf{clock signal} is a \textit{square wave} with \textit{rising} and \textit{falling} edges,
-and a period controlled by the CPU.
-
-\code{PC} is read in the first half of the \textbf{clock period} and updated
-at the \textit{next rising clock edge}.
-
-\subsection{Decode}
-There are 3 steps in the decode stage:
-\begin{enumerate}
-    \item Read the \code{opcode} to determine the instruction type and field lengths.
-    \item Read data from all necessary registers.
-    \item Feed the operation and operands to the ALU stage.
-\end{enumerate}
-
-The \textbf{register file} element is a collection of 32 registers which can be read from or written to.
-
-\begin{tblr}{|X|l|X|l|} \hline
-    \textbf{input} & \textbf{bits} & \textbf{output} & \textbf{bits} \\ \hline
-    read register 1 & 5 & read data 1 & 32 \\
-    read register 2 & 5 & read data 2 & 32 \\ \hline[dashed]
-    write register & 5 \\
-    write data & 32 \\ \hline
-\end{tblr}
-
-The \textbf{\code{RegWrite}} control signal determines whether the instruction
-should read from or write to the registers:
-
-\begin{tblr}{|l|l|X|} \hline
-    & \textbf{\code{RegWrite}} & \textbf{registers per instruction} \\ \hline
-    \code{read} & \code{0} & $\le 2$ \\ \hline[dashed]
-    \code{write} & \code{1} & $\le 1$ \\ \hline
-\end{tblr}
-
-\subsubsection{\code{R}-format Decoding}
-The binary content \code{(Inst)} of R-format instructions map to the inputs as follows:
-\begin{itemize}
-    \item \code{rs $\equiv$ Inst[25:21] $\mapsto$ rr1}
-    \item \code{rt $\equiv$ Inst[20:16] $\mapsto$ rr2}
-    \item \code{rd $\equiv$ Inst[15:11] $\mapsto$ wr}
-\end{itemize}
-
-\subsubsection{\code{I}-format Decoding}
-For I-format instructions, 2 problems arise:
-\begin{enumerate}
-    \item \code{rt}, not part of \code{imm}, needs to be fed to \code{wr}
-    \item \code{imm} needs to be fed to the ALU, not \code{rd2}
-\end{enumerate}
-
-A \textbf{multiplexer} chooses the correct \code{Inst} slice to feed to \code{wr}
-using the control signal \textbf{\code{RegDst}}:
-
-\begin{tblr}{|l|l|X|} \hline
-    & \textbf{\code{RegDst}} & \textbf{input to \code{wr}} \\ \hline
-    \code{I}-format & \code{0} & \code{rt $\equiv$ Inst[20:16]} \\ \hline[dashed]
-    \code{R}-format & \code{1} & \code{rd $\equiv$ Inst[15:11]} \\ \hline
-\end{tblr}
-
-\begin{itemize}
-    \item \code{rs $\equiv$ Inst[25:21] $\mapsto$ rr1}
-    \item \code{rt $\equiv$ Inst[20:16] $\mapsto$ rr2}
-    \item \code{rt $\equiv$ Inst[20:16] $\mapsto$ wr}
-\end{itemize}
-
-Another multiplexer chooses the correct 32-bit binary data to feed into the ALU:
-
-\begin{tblr}{|l|l|X|} \hline
-    & \textbf{\code{ALUSrc}} & \textbf{input to\code{ ALU opr2}} \\ \hline
-    {\code{R}-format \\ or \code{beq}} & \code{0} & \code{rr2 $\equiv$ *rt $\equiv$ *Inst[20:16]} \\ \hline[dashed]
-    {\code{I}-format \\ not \code{beq}} & \code{1} & \code{imm $\equiv$ Inst[15:0], sign extended to 32-bits} \\ \hline
-\end{tblr}
-
-\subsection{Arithmetic Logic Unit (ALU)}
-The ALU performs the arithmetic, shifting, logical, memory, and branching operations.
-
-It takes the operation and operands from the decode stage, performs its computation,
-and feeds the result to the memory stage.
-
-\begin{tblr}{|X|l|X|l|} \hline
-    \textbf{input} & \textbf{bits} & \textbf{output} & \textbf{bits} \\ \hline
-    operand 1 & 32 & is zero? & 1 \\
-    operand 2 & 32 & result & 32 \\ \hline
-\end{tblr}
-
-The \textbf{\code{ALUControl}} signal determines the operation to perform:
-
-\begin{tblr}{|c|c|} \hline
-    \textbf{\code{ALUControl}} & \textbf{operation} \\ \hline
-    \code{0000} & \code{and} \\
-    \code{0001} & \code{or} \\
-    \code{0010} & \code{add} \\
-    \code{0110} & \code{sub} \\
-    \code{0111} & \code{slt} \\
-    \code{1100} & \code{nor} \\ \hline
-\end{tblr}
-
-\subsubsection{Branching Instructions}
-A multiplexer chooses between the next instruction \code{(PC + 4)} and the branch 
-target \code{(BT)} using the control signal \textbf{\code{PCSrc}}:
-
-\begin{tblr}{|l|l|X|} \hline
-    \textbf{\code{isZero}} & \textbf{\code{PCSrc}} & \textbf{next instruction} \\ \hline
-    \code{false $\equiv$ 0} & \code{0} & \code{PC + 4} \\ \hline[dashed]
-    \code{true\phantom{ } $\equiv$ 1} & \code{1} & \code{BT $\equiv$ PC + 4 + imm * 4} \\ \hline
-\end{tblr}
-
-Because both register contents need to be compared,
-the \code{ALUSrc} control value is set to \code{0} for branching instructions.
-
-\code{BT} is computed as follows:
-\begin{enumerate}
-    \item left shift by 2 bits the sign-extended \code{imm} from the decode stage (multiplying the offset by 4)
-    \item add it to \code{PC + 4} from the adder in the fetch stage
-\end{enumerate}
-
-\subsection{Memory}
-Only \code{lw/lb} and \code{sw/sb} instructions operate in this stage,
-the rest remain idle.
-
-The \textbf{data memory} element exists in RAM:
-
-\begin{tblr}{|X|l|X|l|} \hline
-    \textbf{input} & \textbf{bits} & \textbf{output} & \textbf{bits} \\ \hline
-    address \code{(addr)} & 32 & read data \code{(rdt)} & 32 \\ \hline[dashed]
-    write data \code{(wd)} & 32 \\ \hline
-\end{tblr}
-
-\code{addr} is the effective memory address computed by the ALU, and \code{wd}
-is connected to \code{rd2} from the register file from the decode stage.
-
-The control signals \textbf{\code{MemRead}} and \textbf{\code{MemWrite}} control
-the memory operations:
-
-\begin{tblr}{|c|c|X|} \hline
-    \textbf{\code{MemRead}} & \textbf{\code{MemWrite}} & \textbf{action} \\ \hline
-    \code{0} & \code{1} & write \code{wd} into \code{addr} \\ \hline[dashed]
-    \code{1} & \code{0} & read contents of \code{addr} into \code{rdt} \\ \hline
-    \code{0} & \code{0} & do nothing \\ \hline
-    \code{1} & \code{1} & undefined, should not occur \\ \hline
-\end{tblr}
-
-\subsubsection{Non-memory Instructions}
-A multiplexer chooses between the result of the ALU and the read data from memory,
-using the control signal \textbf{\code{MemtoReg}}:
-
-\begin{tblr}{|l|l|X|} \hline
-    & \textbf{\code{MemToReg}} & \textbf{output} \\ \hline
-    non-memory instruction & \code{0} & ALU output \\ \hline[dashed]
-    memory instruction & \code{1} & read data \\ \hline
-\end{tblr}
-
-This output is fed to the write-back stage.
-
-\subsection{Write-back}
-Stores, branches, and jumps remain idle in this stage as there is nothing to be written.
-
-The result of the memory stage is fed into write data \code{(wd)} of the register file.
-
-
-\section{Control}
-\textbf{Control signals} are generated by a \textbf{control unit} based on the type of instruction.
-
-The control unit is a \textbf{combinational circuit} which takes in the 6-bit opcode
-and the 5-bit function code, and outputs the 8 control signals.
-
-\code{funct} is only needed to determine \code{ALUSrc}; every other control signal can be
-derived from \code{opcode} alone.
-
-\subsection{\code{ALUControl}}
-We start with a simplified 1-bit ALU.
-
-\begin{defn}{1-bit MIPS ALU}
-    4 control signals are needed:
-    \begin{enumerate}
-        \keyitem*{\code{Ainvert}}{\code{1} to invert \code{A}, \code{0} otherwise}
-        \keyitem*{\code{Binvert}}{\code{1} to invert \code{B}, \code{0} otherwise}
-        \keyitem*{\code{operation} (2 bits)}{select one of the 3 results}
-    \end{enumerate}
-
-    5 I/O signals:
-    \begin{enumerate}
-        \keyitem*{\code{A}}{input}
-        \keyitem*{\code{B}}{input}
-        \keyitem*{\code{Cin}}{carry in}
-        \keyitem*{\code{Cout}}{carry out}
-        \keyitem*{\code{result}}{output}
-    \end{enumerate}
-\end{defn}
-
-These 1-bit ALUs are daisy-chained to form a 32-bit ALU.
-
-The carries from one of the 1-bit ALUs is fed out via \code{Cout} and into the next one via \code{Cin}.
-
-\code{Ainvert} and \code{Binvert} control the multiplexers which select between their inputs and their negated values:
-
-\begin{tblr}{|c|c|} \hline
-    \textbf{\code{Xinvert}} & \textbf{output} \\ \hline
-    \code{0} & \code{X} \\ \hline[dashed]
-    \code{1} & \code{NOT(X)} \\ \hline
-\end{tblr}
-
-The \code{operation} control signal selects one of the 3 results from the \code{AND} gate, \code{OR} gate, and the adder \code{ADD}:
-
-\begin{tblr}{|c|c|} \hline
-    \textbf{\code{operation}} & \textbf{output} \\ \hline
-    \code{00} & \code{AND} \\
-    \code{01} & \code{OR} \\ \hline[dashed]
-    \code{10} & \code{ADD} \\
-    \code{11} & \code{SLT} \\ \hline
-\end{tblr}
-
-\begin{defn}{1-bit subtraction}
-    \code{Cin} is set to \code{1} due to 2s complement:
-
-    \code{A $-$ B $\equiv$ A $+$ (-B) $\equiv$ A $+$ B' $+$ 1}
-\end{defn}
-
-\begin{defn}{\code{ALUControl}}
-    In MSB to LSB order, \code{ALUControl} comprises of:
-    \begin{enumerate}
-        \item \code{Ainvert}
-        \item \code{Binvert}
-        \item \code{operation}
-    \end{enumerate}
-\end{defn}
-
-\subsubsection{\code{ALUOp}}
-It is necessary to use the \textbf{multi-level decoding approach} to simplify the design process and size of
-the main controller.
-
-\textbf{\code{ALUOp}} is an intermediate 2-bit control signal which is generated from \code{opcode}
-and used with \code{funct} to determine \code{ALUControl}.
-
-\begin{tblr}{|l|l|X|l|} \hline
-    \textbf{instruction} & \textbf{\code{ALUOp}} & \textbf{\code{funct}} & \textbf{\code{ALUControl}} \\ \hline
-    \code{lw, sw} & \code{00} & \code{XXXXXX} & \code{0010} \\ \hline[dashed]
-    \code{beq} & \code{01} & \code{XXXXXX} & \code{0110} \\ \hline[dashed]
-    \code{add} & \code{10} & \code{100000} & \code{0010} \\ \hline[dashed]
-    \code{sub} & \code{10} & \code{100010} & \code{0110} \\ \hline[dashed]
-    \code{and} & \code{10} & \code{100100} & \code{0000} \\ \hline[dashed]
-    \code{or} & \code{10} & \code{100101} & \code{0001} \\ \hline[dashed]
-    \code{slt} & \code{10} & \code{101010} & \code{0111} \\ \hline
-\end{tblr}
-
-In general, \code{ALUOp} is \code{10} for \code{R}-format instructions.
