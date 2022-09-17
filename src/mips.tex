@@ -180,12 +180,12 @@ Every MIPS instruction is \textbf{32 bits} in 3 possible formats:
 
 \begin{tblr}{|llll|} \hline
     \textbf{format} & {\textbf{source} \\ \textbf{registers}} & {\textbf{destination} \\ \textbf{registers}} & {\textbf{immediate} \\ \textbf{values}} \\ \hline
-    R & 2 & 1 & 0 \\
-    I & 1 & 1 & 1 \\
-    J & 0 & 0 & 1 \\ \hline
+    \code{R} & 2 & 1 & 0 \\
+    \code{I} & 1 & 1 & 1 \\
+    \code{J} & 0 & 0 & 1 \\ \hline
 \end{tblr}
 
-\subsection{R-format}
+\subsection{\code{R}-format}
 \begin{tblr}{|X|l|l|l|l|l|l|} \hline
     & \code{opcode} & \code{rs} & \code{rt} & \code{rd} & \code{shamt} & \code{funct} \\ \hline
     bits & 6 & 5 & 5 & 5 & 5 & 6 \\ \hline
@@ -198,7 +198,7 @@ Every MIPS instruction is \textbf{32 bits} in 3 possible formats:
     \item \code{rs := 0}, \code{rd := shift(rt, shamt)} for shift instructions.
 \end{itemize}
 
-\subsection{I-format}
+\subsection{\code{I}-format}
 \begin{tblr}{|l|l|l|l|X|} \hline
     & \code{opcode} & \code{rs} & \code{rt} & \code{immediate} \\ \hline
     bits & 6 & 5 & 5 & 16 \\ \hline
@@ -218,7 +218,7 @@ to the label of the \textit{target} instruction.
 \code{PC} is incremented in multiples of 4 due to word-alignment, which also means that
 we can now branch $2^{15} \times 4 = 2^{17}$ bytes away from \code{PC}.
 
-\subsection{J-format}
+\subsection{\code{J}-format}
 \begin{tblr}{|l|l|X|} \hline
     & \code{opcode} & \code{target address} \\ \hline
     bits & 6 & 26 \\ \hline

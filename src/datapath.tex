@@ -161,8 +161,8 @@ the memory operations:
 \begin{tblr}{|c|c|X|} \hline
     \textbf{\code{MemRead}} & \textbf{\code{MemWrite}} & \textbf{action} \\ \hline
     \code{0} & \code{1} & write \code{wd} into \code{addr} \\ \hline[dashed]
-    \code{1} & \code{0} & read contents of \code{addr} into \code{rdt} \\ \hline
-    \code{0} & \code{0} & do nothing \\ \hline
+    \code{1} & \code{0} & read contents of \code{addr} into \code{rdt} \\ \hline[dashed]
+    \code{0} & \code{0} & do nothing \\ \hline[dashed]
     \code{1} & \code{1} & undefined, should not occur \\ \hline
 \end{tblr}
 
