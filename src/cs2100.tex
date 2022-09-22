@@ -1,14 +1,22 @@
-\documentclass{article}
-% preamble v3.3
+\documentclass[twocolumn]{article}
+% preamble v3.4
+
+% v3.4
+% - replaced `multicol` package with twocolumn documentclass
+% - added `float` package for use with figures
+% - added `codebf` for boldface code
+% - added `karnaugh-map` package for drawing K-maps
+% - added `defn*` environment for definitions with added top vspace
+% - added `booktabs` library from `tabularray` package
 
 % Layout packages
 \usepackage{geometry}
 \geometry{a4paper, portrait, margin=0.32in, top=0.60in} % shrunk margin from 0.4in, top from 0.7in
-\usepackage{multicol} % double column pages or more
 \setlength\columnsep{20pt} % the default columnsep for all pages
 \usepackage[none]{hyphenat} % no line breaking on words
 \usepackage{parskip} % typical paragraphs - no indent, vertical space between paragrahs
 \usepackage{titlesec}
+\usepackage{float} % figure float inline instead of on top of pages
 
 % Alter typesetting of headers and footers
 \usepackage{fancyhdr}
@@ -65,10 +73,12 @@
 \usepackage{tabularray} % modern table typesetting, superseding tabularx
 \usepackage{multirow} % row merging in tables
 \NewColumnType{Y}[1][c]{Q[#1, \linewidth]}
+\UseTblrLibrary{booktabs} % nicer table rules
 
 % Better code environments
 \usepackage{listings}
 \newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\codebf}[1]{\textbf{\code{#1}}}
 \lstset{
     mathescape,
     basicstyle=\small\fontfamily{lmvtt}\selectfont,
@@ -145,6 +155,17 @@
     \setlength{\parskip}{0.5em}
 }{\end{thm*}}
 
+% CS2100 ONLY
+\usepackage{tikz} % drawing logic gates
+\usetikzlibrary{positioning,circuits.logic.US}
+\newenvironment{circuit}{\begin{figure}[H]\begin{tikzpicture}[circuit logic US]}{\end{tikzpicture}\end{figure}}
+\newcommand{\AND}{\code{AND} } % convenience for logic operations
+\newcommand{\OR}{\code{OR} }
+\newcommand{\NOT}{\code{NOT} }
+\renewcommand{\land}{\text{$\hspace{-1ex}\;\cdot\;$}} % convenience for logic operation symbols
+\renewcommand{\lor}{\text{$\hspace{-1ex}\;+\;$}}
+\usepackage[label=corner]{karnaugh-map}
+
 \color{body}
 \pagecolor{background}
 \frenchspacing % subtle differences around punctuation
@@ -154,6 +175,7 @@
 \date{Last updated on \today}
 
 \begin{document}
+    \onecolumn
     \linespread{1.4}\selectfont
     \pagenumbering{gobble} % remove page numbering for content pages
     \maketitle
@@ -161,10 +183,10 @@
     \tableofcontents
     \pageline{1.5pt}
     \linespread{1.08}\selectfont
+    \twocolumn
 
     \newpage
     \pagenumbering{arabic} % re-add page numbering
-    \begin{multicols*}{2}
         \part{Data Representation}
             \input{number-systems.tex}
         \part{Instruction Set Architecture}
@@ -173,5 +195,8 @@
             \input{mips.tex}
             \input{datapath.tex}
             \input{control.tex}
-    \end{multicols*}
+        \part{Digital Logic Design}
+            \input{boolean-algebra.tex}
+            \input{logic-circuits.tex}
+            \input{simplification.tex}
 \end{document}
