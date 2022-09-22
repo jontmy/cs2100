@@ -1,0 +1,111 @@
+\section{Simplification}
+
+\subsection{K-maps}
+\textbf{K-maps} are a systematic way to derive simplified SOP expressions
+with the fewest product terms and literals.
+
+K-maps are organized as a \textit{matrix of squares}, where each square
+represents a \textit{minterm}, and two adjacent squares differ by exactly \textit{one literal}.
+
+\subsubsection{2-variable K-maps}
+\begin{karnaugh-map}[2][2][1][\textbf{b}][\textbf{a}]
+    \manualterms{a' $\cdot$ b', a' $\cdot$ b, a $\cdot$ b', a $\cdot$ b}
+\end{karnaugh-map}
+\begin{karnaugh-map}[2][2][1][\textbf{b}][\textbf{a}]
+    \manualterms{m0, m1, m2, m3}
+\end{karnaugh-map}
+
+\vspace{-2em}
+Every row and column of \code{0}s and \code{1}s can be permuted, such that
+there are many alternative layouts for a K-map.
+
+\begin{defn}{filling K-maps}
+    Place a \codebf{1} in squares corresponding to a minterm of the function, 
+    and \codebf{0} otherwise.
+
+    \raggedright
+    \begin{karnaugh-map}[2][2][1][\textbf{b}][\textbf{a}]
+        \minterms{3}
+        \implicant{3}{3}
+        \autoterms[0]
+    \end{karnaugh-map}
+    \begin{karnaugh-map}[2][2][1][\textbf{b}][\textbf{a}]
+        \minterms{1,2}
+        \implicant{1}{1}
+        \implicant{2}{2}
+        \autoterms[0]
+    \end{karnaugh-map}
+
+    \vspace{-2em}
+    e.g. \code{C = a \land b} (left),\ \ \code{S = a \land b' \lor a' \land b} (right)
+\end{defn}
+
+\subsubsection{3-variable K-maps}
+\begin{karnaugh-map}[4][2][1][\textbf{bc}][\textbf{a}]
+    \manualterms{m0, m1, m2, m3, m4, m5, m6, m7}
+    \implicant{1}{1}
+    \implicant{4}{4}
+    \implicant{2}{2}
+\end{karnaugh-map}
+
+\vspace{-2em}
+The arrangement of the squares ensures that minterms of adjacent cells \textit{differ by only one literal}.
+
+This means that the labels have to be some \textbf{Gray code sequence} where each value
+differs from its previous by 1 bit.
+
+K-maps \textbf{wrap-around} such that the last row is adjacent to the first row, and the last column is adjacent to the first column.
+
+This means that \code{m0} is adjacent to not just \code{m1} and \code{m4}, but also \code{m2}, as colored above.
+
+\begin{defn}{filling K-maps}
+    Since K-maps are used to simplify sum-of-product expressions,
+    we fill in each minterm (\AND product) one-by-one with \codebf{1}s.
+    
+    For each minterm \code{x}, we find the intersection of all the squares of \code{x} or \code{x'} to fill with \code{1}s:
+    \begin{itemize}
+        \keyitem*{\code{x}}{\textit{inside} the rows/columns of \code{x}}
+        \keyitem*{\code{x'}}{\textit{outside} the rows/columns of \code{x}}
+    \end{itemize}
+\end{defn}
+
+\subsubsection{4-variable K-maps}
+\begin{karnaugh-map}[4][4][1][\textbf{wx}][\textbf{yz}]
+    \manualterms{m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}
+    \implicant{1}{1}
+    \implicant{4}{4}
+    \implicant{2}{2}
+    \implicant{8}{8}
+\end{karnaugh-map}
+
+\vspace{-2em}
+The cells adjacent to \code{m0} have also colored above.
+
+An $n$-variable K-map has $n$ neighbors.
+
+\subsubsection{5-variable K-maps}
+\resizebox{\columnwidth}{!}{
+    \begin{karnaugh-map}[4][4][2][\textbf{wx}][\textbf{yz}][\textbf{v}\;]
+        \manualterms{m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25, m26, m27, m28, m29, m30, m31}
+        \implicant{1}{1}
+        \implicant{4}{4}
+        \implicant{2}{2}
+        \implicant{8}{8}
+        \implicant{16}{16}
+    \end{karnaugh-map}
+}
+\vspace{-2em}
+
+\subsubsection{6-variable K-maps}
+\resizebox{\columnwidth}{!}{
+    \begin{karnaugh-map}[4][4][4][\textbf{wx}][\textbf{yz}][\textbf{ab}\;]
+        \manualterms{m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25, m26, m27, m28, m29, m30, m31, m32, m33, m34, m35, m36, m37, m38, m39, m40, m41, m42, m43, m44, m45, m46, m47, m48, m49, m50, m51, m52, m53, m54, m55, m56, m57, m58, m59, m60, m61, m62, m63}
+        \implicant{1}{1}
+        \implicant{4}{4}
+        \implicant{2}{2}
+        \implicant{8}{8}
+        \implicant{16}{16}
+        \implicant{32}{32}
+    \end{karnaugh-map}
+}
+\vspace{-2em}

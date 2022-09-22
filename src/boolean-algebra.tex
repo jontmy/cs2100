@@ -1,0 +1,111 @@
+\section{Boolean Algebra}
+\begin{defn}{order of operations}
+    From highest precedence to lowest:
+
+    \begin{itemize}
+        \item \NOT
+        \item \AND
+        \item \OR
+    \end{itemize}
+
+    Use parentheses to overwrite precedence.
+\end{defn}
+
+\textbf{\code{1}} represents \textbf{\code{true}} and \textbf{\code{0}} represents \textbf{\code{false}}.
+
+\begin{defn}{proving boolean equations}
+    Construct a \textbf{truth table} for the LHS and RHS of the equation,
+    and then show that both expressions are equivalent for all inputs.
+    
+    This is \textbf{proof by exhaustion}.
+\end{defn}
+
+\begin{defn}{duality}
+    In boolean equations, the \textbf{dual} of an equation remains valid by interchanging:
+    
+    \begin{itemize}
+        \item the operators \AND and \OR
+        \item the identity elements \code{0} and \code{1}
+    \end{itemize}
+\end{defn}
+
+\textbf{Boolean functions} are parametrized by a set of variables,
+e.g. \code{F1(A, B, C) = x \land y \land z'}.
+
+The \textbf{complement} of a boolean function is obtained by interchanging \code{1}
+and \code{0} of the function's output values.
+
+\subsection{Standard Forms}
+\begin{itemize*}
+    \keyitem*{literals}{boolean variables or their complement, \\ e.g. \code{x} or \code{x'}}
+    \keyitem*{product terms}{single literal or \AND products of literals, \\ e.g. \code{x} or \code{x \land y \land z'}}
+    \keyitem*{sum terms}{single literal or \OR sum of literals, \\ e.g. \code{x} or \code{x \lor y \lor z'}}
+    \keyitem{sum-of-products (SOP) expression}{a product term or \OR sum of several product terms, \\ e.g. \code{A \land B \lor A' \land B'}}
+    \keyitem{product-of-sums (POS) expression}{a sum term or \AND product of several sum terms, \\ e.g. \code{(A \lor B \lor C) \land D' \land (D' \lor E')}}
+\end{itemize*}
+
+Every boolean expression can be expressed in SOP or POS form.
+
+
+\subsection{Minterms and Maxterms}
+\begin{tblr}{|llll|} \hline
+    & \textbf{...of \textit{n} literals} & \textbf{example} & \textbf{prefix} \\ \hline
+    \textbf{minterm} & \textit{product term} & \code{x' \land y'} & m \\ \hline[dashed]
+    \textbf{maxterm} & \textit{sum term} & \code{x' \lor y'} & M \\ \hline
+\end{tblr}
+
+$n$ variables generate up to $2^n$ minterms and $2^n$ maxterms, and they
+are enumerated and prefixed:
+
+\begin{tblr}{
+    colspec = {|c|c|ll|ll|},
+    row{1, 2} = {font=\bfseries},
+    cell{1}{1, 2} = {r=2}{c},
+    cell{1}{3, 5} = {c=2}{c}
+} \hline
+    \code{x} & \code{y} & minterms & & maxterms \\ \hline
+    & & term & notation & term & notation \\ \hline
+    0 & 0 & \code{x' \land y'} & \code{m0} & \code{x \lor y} & \code{M0} \\ \hline[dashed]
+    0 & 1 & \code{x' \land y} & \code{m1} & \code{x \lor y'} & \code{M1} \\ \hline[dashed]
+    1 & 0 & \code{x \land y'} & \code{m2} & \code{x' \lor y} & \code{M2} \\ \hline[dashed]
+    1 & 1 & \code{x \land y} & \code{m3} & \code{x' \lor y'} & \code{M3} \\ \hline
+\end{tblr}
+
+Every minterm is the complement of its maxterm and vice versa.
+
+\begin{defn*}{deriving minterm notation from expressions}
+    \begin{enumerate}
+        \item Assign \code{0} to every negated variable and \code{1} to every non-negated variable.
+        \item Concatenate the result and convert to decimal.
+        \item Prefix the decimal number with \code{m}.
+    \end{enumerate}
+    
+    For the reverse direction, expand with $\cdot$ as minterms are product terms.
+\end{defn*}
+
+\begin{defn*}{deriving maxterm notation from expressions}
+    \begin{enumerate}
+        \item Assign \code{1} to every negated variable and \code{0} to every non-negated variable.
+        \item Concatenate the result and convert to decimal.
+        \item Prefix the decimal number with \code{M}.
+    \end{enumerate}
+
+    For the reverse direction, expand with $+$ as maxterms are sum terms.
+\end{defn*}
+
+
+\subsection{Canonical Forms}
+\begin{boxed}[l]
+    canonical sum-of-products $\equiv$ sum-of-minterms \\
+    canonical product-of-sums $\equiv$ product-of-maxterms
+\end{boxed}
+
+\begin{defn*}{deriving canonical forms}
+    \begin{itemize*}
+        \keyitem{$\Sigma \code{m}\ $ sum-of-minterms}{\OR the combinations of \code{x}, \code{y}, \code{z}, ... in \code{F(x, y, z, \textrm{...})}
+        such that the output is \code{1}}
+        \keyitem{$\Pi \code{M}\ $ product-of-maxterms}{\AND the combinations of \code{x}, \code{y}, \code{z}, ... in \code{F(x, y, z, \textrm{...})}
+        such that the output is \code{0}}
+        \keyitem{$\Sigma \code{m} \leftrightarrow \Pi \code{M}\;$ conversion}{e.g. \code{F = $\Sigma$m(1, 4, 5, 6, 7) = $\Pi$M(0, 2, 3)}}
+    \end{itemize*}
+\end{defn*}

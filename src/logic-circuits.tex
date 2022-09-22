@@ -1,0 +1,165 @@
+\section{Logic Circuits}
+
+\subsection{Logic Gates}
+
+\begin{tblr}{lX}
+    \textbf{\AND gate} & \parbox{\linewidth}{\begin{circuit}
+        \node [and gate, inputs=nnn, scale=1.6] (and1) {};
+        \draw (and1.input 1) -- node[at end,left]{\code{A}} ++(left:4mm);
+        \draw (and1.input 3) -- node[at end,left]{\code{B}} ++(left:4mm);
+        \draw (and1.output) -- node[at end,right]{\code{A \land B}} ++(right:4mm);
+    \end{circuit}} \\
+    \textbf{\OR gate} & \parbox{\linewidth}{\begin{circuit}
+        \node [or gate, inputs=nnn, scale=1.6] (or1) {};
+        \draw (or1.input 1) -- node[at end,left]{\code{A}} ++(left:4mm);
+        \draw (or1.input 3) -- node[at end,left]{\code{B}} ++(left:4mm);
+        \draw (or1.output) -- node[at end,right]{\code{A \lor B}} ++(right:4mm);
+    \end{circuit}} \\
+    \textbf{\NOT gate} & \parbox{\linewidth}{\begin{circuit}
+        \node [not gate, scale=1.6] (not) {};
+        \draw (not) -- node[at end,left]{\code{A}} ++(left:8mm);
+        \draw (not) -- node[at end,right]{\code{A'}} ++(right:14mm);
+    \end{circuit}}
+\end{tblr}
+
+The \textbf{\code{NAND}} and \textbf{\code{NOR}} operations are the negations of the \code{AND}
+and \code{OR} operations respectively:
+
+\begin{tblr}{lX}
+    \textbf{\code{NAND} gate} & \parbox{\linewidth}{\begin{circuit}
+        \node [nand gate, inputs=nnn, scale=1.6] (nand) {};
+        \draw (nand.input 1) -- node[at end,left]{\code{A}} ++(left:4mm);
+        \draw (nand.input 3) -- node[at end,left]{\code{B}} ++(left:4mm);
+        \draw (nand.output) -- node[at end,right]{\code{(A \land B)'}} ++(right:4mm);
+    \end{circuit}} \\
+    \textbf{\code{NOR} gate} & \parbox{\linewidth}{\begin{circuit}
+        \node [nor gate, inputs=nnn, scale=1.6] (nor) {};
+        \draw (nor.input 1) -- node[at end,left]{\code{A}} ++(left:4mm);
+        \draw (nor.input 3) -- node[at end,left]{\code{B}} ++(left:4mm);
+        \draw (nor.output) -- node[at end,right]{\code{(A \lor B)'}} ++(right:4mm);
+    \end{circuit}} \\
+\end{tblr}
+
+The \textbf{\code{XOR}} operation outputs 1 only if its inputs are different,
+and the \textbf{\code{XNOR}} operation is the complement of that:
+
+\begin{tblr}{lX}
+    \textbf{\code{XOR} gate} & \parbox{\linewidth}{\begin{circuit}
+        \node [xor gate, inputs=nn, scale=1.6] (xor) {};
+        \draw (xor.input 1) -- node[at end,left]{\code{A}} ++(left:4mm);
+        \draw (xor.input 2) -- node[at end,left]{\code{B}} ++(left:4mm);
+        \draw (xor.output) -- node[at end,right]{\code{A $\oplus$ B}} ++(right:4mm);
+    \end{circuit}} \\
+    \textbf{\code{XNOR} gate} & \parbox{\linewidth}{\begin{circuit}
+        \node [xnor gate, inputs=nnn, scale=1.6] (xnor) {};
+        \draw (xnor.input 1) -- node[at end,left]{\code{A}} ++(left:4mm);
+        \draw (xnor.input 2) -- node[at end,left]{\code{B}} ++(left:4mm);
+        \draw (xnor.output) -- node[at end,right]{\code{(A $\oplus$ B)'}} ++(right:4mm);
+    \end{circuit}} \\
+\end{tblr}
+
+\code{XNOR} can also be represented by $\odot$.
+
+The \textbf{fan-in} is the number of inputs to a gate.
+
+\begin{defn}{drawing logic circuits}
+    Every input must be connected in a working circuit, so use \code{0} or \code{1} depending
+    on the gate if you don't have a value to connect.
+
+    If \textbf{complemented literals} are not allowed, use a \code{NOT} gate to negate the input.
+
+    Intersecting wires are denoted by a solid circle \tikz\draw[black, fill=black] (0,0) circle (.4ex);.
+\end{defn}
+
+
+\subsection{Universal Gates}
+The set \code{\{AND, OR, NOT\}} is a \textbf{complete set of logic} --- they are sufficient
+to build any boolean function.
+
+\code{\{NAND\}} and \code{\{NOR\}} are also complete sets of logic.
+
+\begin{tblr}{colspec = {|lll|}, row{1} = {font=\bfseries},} \hline
+    & implementation \#1 & implementation \#2 \\ \hline
+    \textbf{SOP} & \code{AND-OR} circuit & \code{NAND} circuit \\ \hline[dashed]
+    \textbf{POS} & \code{OR-AND} circuit & \code{NOR} circuit \\ \hline
+\end{tblr}
+
+
+\subsection{Programmable Logic Array (PLA)}
+A \textbf{programmable logic array} implements sum-of-products (SOP) circuits,
+which allows for multiple outputs.
+
+It has 2 stages:
+\begin{enumerate}
+    \keyitem*{\AND gates}{product terms}
+    \keyitem*{\OR gates}{outputs}
+\end{enumerate}
+
+\begin{defn*}{drawing PLA diagrams}
+    \begin{enumerate*}
+        \item Draw a horizontal line for each input.
+        \item Draw an \AND gate for each possible input combination that has at least one \code{1} output minterm.
+        \item For each input for every \AND gate, add an inverter \tikz\draw[black] (0,0) circle (.4ex); if the input is \code{0}.
+        \item Connect each input of every \AND gate to the corresponding input line with \tikz\draw[black, fill=black] (0,0) circle (.4ex); at the intersection.
+        \item Draw a vertical line for each \AND gate output.
+        \item Draw an \OR gate for each output.
+        \item Connect the output line of each \AND gate to the corresponding \OR gate with \tikz\draw[black, fill=black] (0,0) circle (.4ex); at the intersection if that output is \code{1} .
+    \end{enumerate*}
+\end{defn*}
+
+Simplified PLA diagrams eliminate the need to draw the \AND and \OR gates.
+
+\begin{defn*}{interpreting simplified PLAs}
+    \begin{itemize*}
+        \keyitem{inputs}{each input \code{A}, \code{B}, \code{C}, ... is paired with its negated input \code{A'}, \code{B'}, \code{C'}, ... in horizontal lines}
+        \keyitem{\AND plane}{solid circles in each vertical line represent the inputs to an \AND gate}
+        \keyitem{\OR plane}{solid circles in each horizontal line represent the inputs to an \OR gate}
+        \keyitem{ouputs}{each of the \OR gates is (connected to) an output}
+    \end{itemize*}
+\end{defn*}
+
+
+\subsection{Half Adder}
+The \textbf{half adder} adds 2 bits \code{X} and \code{Y} to produce 2 bits \code{C} and \code{S}:
+\begin{itemize}
+    \item \code{C = X \land Y}
+    \item \code{S = X' \land Y \lor X \land Y' = X $\oplus$ Y}
+\end{itemize}
+
+\begin{tblr}{
+    colspec = {Q[c, 3ex]Q[c, 3ex]Q[c, 3ex]Q[c, 3ex]},
+    row{1} = {font=\bfseries},
+    row{2} = {font=\bfseries},
+    cell{1}{1} = {c=2}{c},
+    cell{1}{3} = {c=2}{c}
+}
+    \toprule
+    inputs & & outputs \\
+    \cmidrule[lr]{1-2}
+    \cmidrule[lr]{3-4}
+    X & Y & C & S \\
+    \midrule
+    0 & 0 & 0 & 0 \\
+    0 & 1 & 0 & 1 \\
+    1 & 0 & 0 & 1 \\
+    1 & 1 & 1 & 0 \\
+    \bottomrule
+\end{tblr}
+
+
+\subsection{Gray Code}
+\textbf{Gray code} is an unweighted binary sequence where only \textit{one} bit changes
+between consecutive values, with no duplicate values.
+
+An $n$-bit Gray code has $2^n$ values, but there are many possible Gray code sequences.
+
+\begin{defn*}{generating the standard $n$-bit Gray code sequence}
+    \begin{enumerate}
+        \item Start with the $n$-bit binary values for \code{0} and \code{1}.
+        \item Mirror the first existing values, effectively doubling the number of values.
+        \item On the $i$-th doubling, replace the \code{0} in the $i+1$th place from the right with \code{1} for each of the reflected values.
+        \item Repeat until you have $2^n$ values after $n-1$ doublings.
+    \end{enumerate}
+\end{defn*}
+
+The \textbf{standard Gray code} sequence 
