@@ -1,0 +1,143 @@
+\section{Pipelining}
+\textbf{Pipelining} increases workload throughput, but is \textit{rate limited} by the
+slowest stage in the pipeline, and \textit{stalled} by dependencies between stages.
+
+Each execution stage in the MIPS datapath is a \textbf{pipeline stage} which takes 1 clock cycle.
+
+Data required for each stage is stored separately in \textbf{4 pipeline registers}:
+
+\begin{enumerate}
+    \keyitem*{\code{IF/ID}}{between \code{fetch} and \code{decode}}
+    \keyitem*{\code{ID/EX}}{between \code{decode} and \code{execute}}
+    \keyitem*{\code{EX/MEM}}{between \code{execute} and \code{memory}}
+    \keyitem*{\code{MEM/WB}}{between \code{memory} and \code{writeback}}
+\end{enumerate}
+
+\begin{tblr}{
+    colspec = {lXX},
+    row{1} = {font=\bfseries},
+}
+    \toprule
+    register & receives & supplies \\
+    \midrule
+    \code{IF/ID} & {\code{Instruction[PC]}, \\ \code{PC + 4}} & {\code{RR1} and \code{RR2}, \\ 16-bit \code{offset}, \\ \code{PC + 4}, \\ \code{WR}} \\
+    \code{ID/EX} & {\code{RD1} and \code{RD2}, \\ 32-bit \code{imm}, \\ \code{PC + 4}, \\ \code{WR}} & {\code{RD1} and \code{RD2}, \\ 32-bit \code{imm}, \\ \code{PC + 4}, \\ \code{WR}} \\
+    \code{EX/MEM} & {\code{PC + 4 + 4 * imm}, \\ ALU result, \\ \code{isZero?}, \\ \code{RD2}, \\ \code{WR}} & {\code{PC + 4 + 4 * imm}, \\ ALU result, \\ \code{isZero?}, \\ \code{RD2}, \\ \code{WR}} \\
+    \code{MEM/WB} & {ALU result, \\ memory data read, \\ \code{WR}} & \code{WR} \\
+    \bottomrule
+\end{tblr}
+
+\begin{defn}{control signals}
+    All control signals are generated in the \code{decode} stage and propagated to their
+    respective pipeline stages.
+
+    \begin{itemize}
+        \keyitem*{\code{execute}}{\code{RegDst, ALUSrc, ALUOp}}
+        \keyitem*{\code{memory}}{\code{MemRead, MemWrite, Branch}}
+        \keyitem*{\code{writeback}}{\code{MemToReg, RegWrite}}
+    \end{itemize}
+\end{defn}
+
+\subsection{Performance}
+
+\begin{defn}{single-cycle processor}
+    Each instruction takes 1 clock cycle to execute.
+
+    The \textbf{cycle time} $CT_{seq}$ is the longest time taken to execute any single instruction:
+
+    \( CT_{seq} = \max \left( \sum_{k=1}^{N} T_k \right) \)
+
+    where $N$ is the number of stages and $T_k$ is the time taken to execute an operation in stage $k$.
+
+    The \textbf{execution time} $ET_{seq}$ depends on the number of instructions $I$:
+    
+    \( ET_{seq} = CT_{seq} \cdot I \)
+\end{defn}
+
+\begin{defn}{multi-cycle processor}
+    Each \textit{stage} takes 1 clock cycle to execute.
+
+    The \textbf{cycle time} $CT_{multi}$ is the longest time taken to execute any single stage.
+
+    The \textbf{execution time} $ET_{multi}$ depends on the number of instructions $I$ and the average
+    number of instructions per instruction $CPI_{avg}$:
+    
+    \( ET_{multi} = CT_{multi} \cdot I \cdot CPI_{avg} \)
+\end{defn}
+
+\begin{defn}{pipelined processor}
+    The \textbf{cycle time} $CT_{pipelined}$ incurs a pipelining overhead $T_d$:
+
+    \( CT_{pipelined} = \max \left( T_k \right) + T_d \)
+
+    where $T_k$ is the time taken to execute an operation in stage $k$.
+
+    The \textbf{execution time} $ET_{pipelined}$ depends on the number of instructions $I$ and stages $N$:
+    
+    \( ET_{pipelined} = CT_{pipelined} \times (I + N - 1) \)
+\end{defn}
+
+In an \textbf{ideal pipeline}:
+\begin{itemize*}
+    \item every stage takes the same amount of time: \\[0.25em] \( \sum_{k=1}^{N} T_k = N \cdot T_1 \)
+    \item there is no pipeline overhead: \\[0.25em] \( T_d = 0 \)
+    \item the number of instructions is much larger than the number of stages: \\[0.25em] \( I >> N \)
+\end{itemize*}
+
+This results in a \textbf{ideal speedup} by $N$:
+
+\( \frac{ET_{seq}}{ET_{pipelined}} = \frac{I \cdot N \cdot T_1}{(I + N - 1) \cdot T_1} \approx \frac{I \cdot N \cdot T_1}{I \cdot T_1} = N \)
+
+
+\subsection{Hazards}
+
+\textbf{Pipeline hazards} are problems that prevent an instruction immediately
+after a previous instruction.
+
+\textbf{Structural hazards} are caused by simultaneous use of the same register file,
+memory, or ALU by multiple instructions.
+
+\begin{defn}{resolving structural hazards}
+    a) stall the execution by one or more cycles.
+
+    b) split the memory into \code{Data} and \code{Instruction}.
+
+    c) write to the register file in the first half of a cycle,
+    and read in the second half --- allowed as register access is fast.
+\end{defn}
+
+\textbf{Data hazards} are caused by \textbf{read-after-write dependencies} between instructions,
+where the result of an instruction is read by a subsequent instruction.
+
+This can lead to \textbf{stale results} if the result is not written to the register file in time.
+
+\begin{defn}{resolving data hazards}
+    \textbf{forwarding:} a result that needs to be read is passed to the instruction one clock cycle before it is needed,
+    bypassing the data read from the register file.
+
+    \textbf{stalling:} an instruction that needs a value read from memory is stalled until the prior
+    \code{lw} instruction loads the value into the register.
+\end{defn}
+
+\textbf{Control hazards} are caused by a change in program flow.
+
+Branching decisions are made in the \code{memory} stage, which is too late as the next instructions will
+be partially executed.
+
+\begin{defn}{resolving control hazards \\ (stalls in clock cycles (CCs))}
+    \textbf{stalling:} any instruction after the branching instruction is stalled until the branching
+    decision is known (\textbf{3 CCs}).
+
+    \textbf{early branch resolution:} move register comparison to the \code{decode} stage (\textbf{1 CC}).
+
+    If a value in the branch instruction is \textit{computed} in the previous instruction we still need another stall (\textbf{2 CCs total}),
+    and if it needs to be \textit{loaded}, the delay does not improve (\textbf{3 CCs total}).
+
+    \textbf{branch prediction:} guess the branch decision before it is produced
+
+    Assume all branches are not taken (\textbf{0 CCs}) and flush the successor instruction
+    from the pipeline if the branch is taken (\textbf{simple prediction, 1 CC}).
+
+    \textbf{delayed branching:} branches which would precede the branch and executed regardless of the
+    branch decision are moved into the delayed slot
+\end{defn}
