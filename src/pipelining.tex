@@ -2,7 +2,15 @@
 \textbf{Pipelining} increases workload throughput, but is \textit{rate limited} by the
 slowest stage in the pipeline, and \textit{stalled} by dependencies between stages.
 
-Each execution stage in the MIPS datapath is a \textbf{pipeline stage} which takes 1 clock cycle.
+Each execution stage in the MIPS datapath is a \textbf{pipeline stage} which takes 1 clock cycle:
+
+\begin{enumerate}
+    \keyitem*{\code{fetch}}{requires the instruction memory}
+    \keyitem*{\code{decode}}{involves the register file}
+    \keyitem*{\code{execute}}{involves the ALU}
+    \keyitem*{\code{memory}}{requires data memory}
+    \keyitem*{\code{writeback}}{involves the register file}
+\end{enumerate}
 
 Data required for each stage is stored separately in \textbf{4 pipeline registers}:
 
@@ -106,17 +114,39 @@ memory, or ALU by multiple instructions.
     and read in the second half --- allowed as register access is fast.
 \end{defn}
 
-\textbf{Data hazards} are caused by \textbf{read-after-write dependencies} between instructions,
+\textbf{Data hazards} are caused by \textbf{read-after-write (RAW) dependencies} between instructions,
 where the result of an instruction is read by a subsequent instruction.
 
 This can lead to \textbf{stale results} if the result is not written to the register file in time.
 
-\begin{defn}{resolving data hazards}
-    \textbf{forwarding:} a result that needs to be read is passed to the instruction one clock cycle before it is needed,
-    bypassing the data read from the register file.
+\begin{defn}{resolving RAW data hazards --- forwarding}
+    Suppose sequential instructions \code{B}, \code{C}, and \code{D} each have a RAW dependency on
+    instruction \code{A}.
 
-    \textbf{stalling:} an instruction that needs a value read from memory is stalled until the prior
-    \code{lw} instruction loads the value into the register.
+    With \textbf{forwarding}, the result of \code{A} is computed in the \code{execute} stage, and
+    is fed into the \code{execute} stage of \code{B} and \code{C}, bypassing the register file.
+
+    \code{B} receives the result from the pipeline register \code{EX/MEM}.
+    \code{C} receives the result from \code{MEM/WB}.
+
+    Because writing and reading to the register file in two different halves of the same clock cycle,
+    instruction \code{D} can read the result from the register file.
+\end{defn}
+
+\begin{defn}{resolving loading data hazards --- stalling}
+    Suppose instruction \code{A} reads data from memory, and \code{B} and \code{C} are dependent on
+    this data.
+    
+    Because \code{A} produces this data in the \code{memory} stage only after it is needed by
+    the \code{execute} stage of B, no data can be forwarded yet.
+
+    Consequently, \code{B} has to \textbf{stall} the pipeline until its \code{execute} stage
+    can receive forwarded data from \code{MEM/WB} from \code{A}.
+
+    If \code{B} is the next instruction after \code{A}, then the stall is 1 clock cycle long.
+
+    Because writing and reading to the register file in two different halves of the same clock cycle,
+    instruction \code{C} can read the result from the register file.
 \end{defn}
 
 \textbf{Control hazards} are caused by a change in program flow.
@@ -124,20 +154,35 @@ This can lead to \textbf{stale results} if the result is not written to the regi
 Branching decisions are made in the \code{memory} stage, which is too late as the next instructions will
 be partially executed.
 
-\begin{defn}{resolving control hazards \\ (stalls in clock cycles (CCs))}
-    \textbf{stalling:} any instruction after the branching instruction is stalled until the branching
-    decision is known (\textbf{3 CCs}).
+\begin{defn}{resolving control hazards --- stalling}
+    The \textbf{branch decision} is known in the \code{memory} stage, so we can stall for 3 clock cycles
+    and then \code{fetch} the next instruction.
+\end{defn}
 
-    \textbf{early branch resolution:} move register comparison to the \code{decode} stage (\textbf{1 CC}).
+\begin{defn}{resolving control hazards --- early branch resolution}
+    Moving the branch decision to the \code{execute} stage allows reduces the stall duration to 1 clock cycle.
 
-    If a value in the branch instruction is \textit{computed} in the previous instruction we still need another stall (\textbf{2 CCs total}),
-    and if it needs to be \textit{loaded}, the delay does not improve (\textbf{3 CCs total}).
+    If a value in the branch instruction is \textit{computed} in the preceding instruction, the stall duration is only
+    reduced to 2 clock cycles.
 
-    \textbf{branch prediction:} guess the branch decision before it is produced
+    If a value in the branch instruction is \textit{loaded} in the preceding instruction, the stall duration
+    remains at 3 clock cycles.
+\end{defn}
 
-    Assume all branches are not taken (\textbf{0 CCs}) and flush the successor instruction
-    from the pipeline if the branch is taken (\textbf{simple prediction, 1 CC}).
+\begin{defn}{resolving control hazards --- branch prediction}
+    Assume all branches are not taken, no stall required.
+    Flush the succeeding instruction from the pipeline if the branch \textit{is} taken.
 
-    \textbf{delayed branching:} branches which would precede the branch and executed regardless of the
-    branch decision are moved into the delayed slot
+    Flushing wastes 3 clock cycles without early branch resolution.
+    With early branch resolution, it wastes the same number of clock cycles as stalling would.
+\end{defn}
+
+\begin{defn}{resolving control hazards --- delayed branching}
+    Instructions which precede the branching instruction and are executed regardless of the
+    branch decision are re-ordered to execute \textit{after} the branch instruction.
+
+    The MIPS processor has 1 of these \textbf{branch-delay slots}.
+
+    If no such instruction can be found, the branch instruction is delayed by 1 clock cycle
+    via a \code{nop}.
 \end{defn}
