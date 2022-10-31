@@ -1,0 +1,118 @@
+\section{Caching}
+A \textbf{cache hit} occurs when requested data is in the cache, and a
+\textbf{cache miss} occurs when requested data is not in the cache.
+
+Cache misses incur a \textbf{cache miss penalty} which is the time taken to
+replace the cache block in addition to the \textbf{hit time}.
+
+\begin{defn}{average access time}
+    average access time = hit rate $\times$ hit time + (1 - hit rate) $\times$ miss penalty
+\end{defn}
+
+The \textbf{cache block} is the unit of transfer between the memory and cache,
+and typically $\geq$ 1 word.
+
+The word addresses of a cache block of size $2^N$ bytes have the same $(32 - N)$ leftmost bits
+which form the \textbf{block number}. The remaining $N$ rightmost bits form the
+\textbf{byte offset}.
+
+\begin{tblr}{hlines, vlines, colspec={Xl}}
+    { block number \\ $[31..N]$ } & { byte offset \\ $[N-1..0]$ }
+\end{tblr}
+
+
+\subsection{Direct Mapped (DM) Caches}
+Given a cache with $2^M$ \textbf{cache blocks}, the \textbf{index} are the $M$ rightmost bits
+of the \textit{block number}, and the \textbf{tag} are the remaining leftmost bits of the block number.
+
+\begin{tblr}{hlines, vlines, colspec={Xll}}
+    { tag \\ $[31..N+M]$ } & { index \\  $[N+M-1..N]$ } & { offset \\ $[N-1..0]$ } \\
+\end{tblr}
+
+Caches incur a \textbf{cache overhead} as each cache block stores the tag of the corresponding memory
+block as well as a \textbf{valid bit} indicating whether its data is valid.
+
+Cache hits only occur when \code{valid[index] == true} and \code{tag[index] == block\_number}.
+
+\begin{defn}{cache circuitry}
+    For an $N$-bit offset and $M$-bit index, the tag is $32 - N + M$ bits.
+
+    \begin{enumerate}
+        \item Index into the cache using the cache index to get the cache block.
+        \item Check if it is a cache hit via an \code{AND} gate.
+        \item If it is a cache hit, multiplex the words from the cache block using the offset.
+    \end{enumerate}
+
+    Recall that MIPS uses a 4-byte word size, so the rightmost 2 bits of the offset is ignored,
+    and only the 2 leftmost bits are used to index into the cache block.
+\end{defn}
+
+\begin{defn*}{cache misses}
+    \begin{itemize*}
+        \keyitem{compulsory misses}{occurs on the first access to a block, requiring the block to be brought into the cache}
+        \keyitem{conflict misses (DM and SA caches only)}{occurs when several memory blocks are mapped to the same cache block}
+        \keyitem{capacity misses (FA caches only)}{occurs when blocks are discarded as cache capacity is exceeded}
+    \end{itemize*}
+\end{defn*}
+
+\begin{defn}{write policies}
+    Writing to a cache can cause data inconsistency, as the data is only modified in cache
+    but not in memory.
+
+    \begin{itemize*}
+        \keyitem{write-through cache}{write to memory as well as cache, but add a buffer
+        between cache and memory otherwise data writes operate at the speed of the memory}
+        \keyitem{write-back cache}{writes to cache, and writes to memory when the cache block is evicted
+        determined by a \textbf{dirty bit} at each cache block}
+    \end{itemize*}    
+\end{defn}
+
+\begin{defn*}{write miss policies}
+    \begin{itemize*}
+        \keyitem{write-allocate}{load the complete block and change the required word, writing to memory
+        based on the write policy}
+        \keyitem{write-around}{ignore the cache and write directly to memory}
+    \end{itemize*}    
+\end{defn*}
+
+
+\subsection{Set Associative (SA) Caches}
+An $N$-way set associate cache consists of a number of \textbf{sets},
+such that each set has $N$ cache blocks.
+
+Each memory block maps to a unique cache set, within which they can be
+placed in \textit{any} of the $N$ cache blocks.
+
+The sets of the cache are indexed via a \textbf{set index}, and \textit{all} $N$ cache blocks
+of a set has to be searched for a cache hit/miss.
+
+\begin{tblr}{hlines, vlines, colspec={Xll}}
+    { tag \\ $[31..N+M]$ } & { set index \\  $[N+M-1..N]$ } & { offset \\ $[N-1..0]$ } \\
+\end{tblr}
+
+For a cache of size $k$ and block size $b$, the number of bits needed for the set index is
+$\log_2 (k \div b \div N)$.
+
+A direct-mapped cache of size $N$ has about the same miss rate as a 2-way associative
+cache of size $\frac{N}{2}$.
+
+
+\subsection{Fully Associative (FA) Caches}
+A fully associative cache allows any memory block to be placed in any cache block,
+but this comes at the cost of searching \textit{every} cache block for memory access.
+
+The tags are equivalent to the block numbers, and all tags are compared in parallel.
+
+FA caches do not suffer from conflict misses.
+
+\begin{defn}{block replacement policies}
+    A full cache block must be replaced when a new memory block is to be inserted.
+
+    \begin{itemize*}
+        \keyitem{least recently used (LRU)}{cache hits record the cache block accessed,
+        replace the block that has not been accessed for the longest time due to \textbf{temporal locality}}
+    \end{itemize*}
+
+    Other policies include \textbf{least frequently used (LFU)} \textbf{random replacement},
+    and \textbf{first-in first-out (FIFO)}.
+\end{defn}
